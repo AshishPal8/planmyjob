@@ -10,6 +10,21 @@ import {
   setAuthCookie,
 } from "../../utils/auth";
 import { sanitizeUser } from "../../utils/user";
+import { googleCallbackUrl, googleClientId } from "../../utils";
+
+export const googleLogin = (req: Request, res: Response): void => {
+  const params = new URLSearchParams({
+    client_id: googleClientId,
+    redirect_uri: googleCallbackUrl,
+    response_type: "code",
+    scope: "openid email profile",
+    access_type: "offline",
+  });
+
+  res.redirect(
+    `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`,
+  );
+};
 
 export const googleCallback = async (
   req: Request,
