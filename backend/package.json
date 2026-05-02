@@ -4,10 +4,10 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "nodemon /src/index.ts",
+    "dev": "bun --watch src/index.ts",
     "start": "bun run db:push && bun src/index.ts",
-    "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:push": "bun drizzle-kit push",
+    "db:studio": "bun drizzle-kit studio"
   },
   "devDependencies": {
     "@types/bun": "latest",

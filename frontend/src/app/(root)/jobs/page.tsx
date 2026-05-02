@@ -1,0 +1,478 @@
+"use client";
+import { useState, useEffect, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { Search, MapPin, X, SlidersHorizontal, Sparkles } from "lucide-react";
+import JobCard from "@/components/jobs/JobCard";
+import ResumeUploadModal from "@/modals/ResumeUploadModal";
+import { categories, jobs as allJobs } from "@/data";
+import type { Job } from "@/data";
+import { Button } from "@/components/ui/button";
+
+const JOB_TYPES = [
+  "Full-time",
+  "Part-time",
+  "Contract",
+  "Internship",
+  "Remote",
+];
+const EXP_LEVELS = [
+  "0-1 years",
+  "1-3 years",
+  "3-5 years",
+  "5-8 years",
+  "8+ years",
+];
+const SALARY_RNGS = [
+  "0-10 LPA",
+  "10-20 LPA",
+  "20-40 LPA",
+  "40-60 LPA",
+  "60+ LPA",
+];
+
+function JobsContent() {
+  const searchParams = useSearchParams();
+
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [matched, setMatched] = useState(false);
+  const [search, setSearch] = useState(searchParams.get("q") || "");
+  const [location, setLocation] = useState(searchParams.get("location") || "");
+  const [selTypes, setSelTypes] = useState<string[]>([]);
+  const [selExp, setSelExp] = useState<string[]>([]);
+  const [selSal, setSelSal] = useState<string[]>([]);
+  const [selCat, setSelCat] = useState(searchParams.get("category") || "");
+  const [sortBy, setSortBy] = useState("relevance");
+  const [showResume, setShowResume] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [total, setTotal] = useState(0);
+
+  const fetchJobs = useCallback(async () => {
+    setLoading(true);
+    // Simulate slight delay for professional feel
+    setTimeout(() => {
+      let filtered = [...allJobs];
+
+      if (search) {
+        const q = search.toLowerCase();
+        filtered = filtered.filter(
+          (j) =>
+            j.title.toLowerCase().includes(q) ||
+            j.company.toLowerCase().includes(q) ||
+            j.tags.some((t) => t.toLowerCase().includes(q)),
+        );
+      }
+
+      if (location) {
+        const loc = location.toLowerCase();
+        filtered = filtered.filter((j) =>
+          j.location.toLowerCase().includes(loc),
+        );
+      }
+
+      if (selCat) {
+        filtered = filtered.filter((j) => j.category === selCat);
+      }
+
+      if (selTypes.length > 0) {
+        filtered = filtered.filter((j) => selTypes.includes(j.type));
+      }
+
+      if (selExp.length > 0) {
+        filtered = filtered.filter((j) =>
+          selExp.some((e) => j.experience.includes(e.split(" ")[0])),
+        );
+      }
+
+      if (selSal.length > 0) {
+        // Simple salary filtering logic
+        filtered = filtered.filter((j) =>
+          selSal.some((s) => {
+            const val = parseInt(s.split("-")[1]) || 100;
+            return j.salaryMax / 100000 <= val;
+          }),
+        );
+      }
+
+      if (sortBy === "salary") {
+        filtered.sort((a, b) => b.salaryMax - a.salaryMax);
+      } else if (sortBy === "recent") {
+        filtered.sort((a, b) => {
+          const parsePosted = (p: string) => {
+            if (p.includes("day")) return parseInt(p);
+            if (p.includes("week")) return parseInt(p) * 7;
+            return 30;
+          };
+          return parsePosted(a.posted) - parsePosted(b.posted);
+        });
+      }
+
+      setJobs(filtered);
+      setTotal(filtered.length);
+      setMatched(searchParams.get("matched") === "true");
+      setLoading(false);
+    }, 400);
+  }, [
+    search,
+    location,
+    selTypes,
+    selExp,
+    selSal,
+    selCat,
+    sortBy,
+    searchParams,
+  ]);
+
+  useEffect(() => {
+    fetchJobs();
+  }, [fetchJobs]);
+
+  const toggleType = (t: string) =>
+    setSelTypes((p) => (p.includes(t) ? p.filter((x) => x !== t) : [...p, t]));
+  const toggleExp = (e: string) =>
+    setSelExp((p) => (p.includes(e) ? p.filter((x) => x !== e) : [...p, e]));
+  const toggleSal = (s: string) =>
+    setSelSal((p) => (p.includes(s) ? p.filter((x) => x !== s) : [...p, s]));
+  const clearAll = () => {
+    setSelTypes([]);
+    setSelExp([]);
+    setSelSal([]);
+    setSelCat("");
+    setSearch("");
+    setLocation("");
+  };
+
+  return (
+    <div className="min-h-screen bg-[#f0f5ff]">
+      {showResume && (
+        <ResumeUploadModal
+          open={showResume}
+          onClose={() => setShowResume(false)}
+          onComplete={(skills, exp) => {
+            setShowResume(false);
+            // In a real app, we would use skills/exp to filter, but here we just refresh
+            fetchJobs();
+          }}
+        />
+      )}
+
+      {/* Search header */}
+      <section className="pt-20 pb-6 bg-white border-b border-[#e2eaf8]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+            <div>
+              <h1
+                className="text-2xl font-bold text-[#0c1a3a]"
+                style={{ fontFamily: "Sora,sans-serif" }}
+              >
+                {matched
+                  ? "🎯 Jobs Matched to Your Resume"
+                  : "Find Your Next Opportunity"}
+              </h1>
+              {matched && (
+                <p className="text-blue-600 text-sm mt-0.5">
+                  Sorted by relevance to your skills
+                </p>
+              )}
+            </div>
+            <Button onClick={() => setShowResume(true)}>
+              <Sparkles size={14} /> Match My Resume
+            </Button>
+          </div>
+
+          {/* Search bar */}
+          <div className="bg-[#f8fbff] border border-[#e2eaf8] rounded-2xl p-2 flex flex-col sm:flex-row gap-2">
+            <div className="flex items-center gap-2.5 flex-1 px-3 py-1.5">
+              <Search size={15} className="text-blue-500 shrink-0" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && fetchJobs()}
+                placeholder="Job title, skills, or company..."
+                className="bg-transparent w-full text-[#0c1a3a] placeholder-[#a8bcd8] outline-none text-sm"
+              />
+              {search && (
+                <button onClick={() => setSearch("")}>
+                  <X size={13} className="text-[#a8bcd8]" />
+                </button>
+              )}
+            </div>
+            <div className="hidden sm:block w-px bg-[#e2eaf8] self-stretch my-1" />
+            <div className="flex items-center gap-2.5 flex-1 px-3 py-1.5">
+              <MapPin size={15} className="text-blue-500 shrink-0" />
+              <input
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && fetchJobs()}
+                placeholder="City or remote..."
+                className="bg-transparent w-full text-[#0c1a3a] placeholder-[#a8bcd8] outline-none text-sm"
+              />
+            </div>
+            <Button onClick={fetchJobs}>Search</Button>
+          </div>
+        </div>
+      </section>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex gap-7">
+          {/* Sidebar filters */}
+          <aside
+            className={`${showFilters ? "block" : "hidden"} lg:block w-60 shrink-0`}
+          >
+            <div className="bg-white border border-[#e2eaf8] rounded-2xl p-5 sticky top-24 shadow-card space-y-6">
+              <div>
+                <h3
+                  className="text-[#0c1a3a] text-sm font-semibold mb-3"
+                  style={{ fontFamily: "Sora,sans-serif" }}
+                >
+                  Category
+                </h3>
+                <div className="space-y-0.5">
+                  <button
+                    onClick={() => setSelCat("")}
+                    className={`w-full text-left px-3 py-2 rounded-xl text-sm transition-all ${!selCat ? "bg-blue-50 text-blue-600 font-semibold" : "text-[#7a92c1] hover:bg-[#f0f5ff] hover:text-[#2d4070]"}`}
+                  >
+                    All Categories
+                  </button>
+                  {categories.map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => setSelCat(cat.name)}
+                      className={`w-full text-left px-3 py-2 rounded-xl text-sm transition-all flex justify-between ${selCat === cat.name ? "bg-blue-50 text-blue-600 font-semibold" : "text-[#7a92c1] hover:bg-[#f0f5ff] hover:text-[#2d4070]"}`}
+                    >
+                      <span>
+                        {cat.icon} {cat.name}
+                      </span>
+                      <span className="text-xs opacity-60">
+                        {cat.count.toLocaleString()}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <hr className="divider" />
+
+              <div>
+                <h3
+                  className="text-[#0c1a3a] text-sm font-semibold mb-3"
+                  style={{ fontFamily: "Sora,sans-serif" }}
+                >
+                  Job Type
+                </h3>
+                <div className="space-y-2">
+                  {JOB_TYPES.map((t) => (
+                    <label
+                      key={t}
+                      className="flex items-center gap-2 cursor-pointer group"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selTypes.includes(t)}
+                        onChange={() => toggleType(t)}
+                        className="accent-blue-600 w-4 h-4 rounded"
+                      />
+                      <span
+                        className={`text-sm ${selTypes.includes(t) ? "text-blue-600 font-medium" : "text-[#7a92c1] group-hover:text-[#2d4070]"}`}
+                      >
+                        {t}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <hr className="divider" />
+
+              <div>
+                <h3
+                  className="text-[#0c1a3a] text-sm font-semibold mb-3"
+                  style={{ fontFamily: "Sora,sans-serif" }}
+                >
+                  Experience
+                </h3>
+                <div className="space-y-2">
+                  {EXP_LEVELS.map((l) => (
+                    <label
+                      key={l}
+                      className="flex items-center gap-2 cursor-pointer group"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selExp.includes(l)}
+                        onChange={() => toggleExp(l)}
+                        className="accent-blue-600 w-4 h-4 rounded"
+                      />
+                      <span
+                        className={`text-sm ${selExp.includes(l) ? "text-blue-600 font-medium" : "text-[#7a92c1] group-hover:text-[#2d4070]"}`}
+                      >
+                        {l}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <hr className="divider" />
+
+              <div>
+                <h3
+                  className="text-[#0c1a3a] text-sm font-semibold mb-3"
+                  style={{ fontFamily: "Sora,sans-serif" }}
+                >
+                  Salary (LPA)
+                </h3>
+                <div className="space-y-2">
+                  {SALARY_RNGS.map((r) => (
+                    <label
+                      key={r}
+                      className="flex items-center gap-2 cursor-pointer group"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selSal.includes(r)}
+                        onChange={() => toggleSal(r)}
+                        className="accent-blue-600 w-4 h-4 rounded"
+                      />
+                      <span
+                        className={`text-sm ${selSal.includes(r) ? "text-blue-600 font-medium" : "text-[#7a92c1] group-hover:text-[#2d4070]"}`}
+                      >
+                        {r}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <Button onClick={clearAll} variant={"outline"}>
+                Clear All Filters
+              </Button>
+            </div>
+          </aside>
+
+          {/* Jobs list */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+              <div>
+                <span className="text-[#0c1a3a] font-semibold">
+                  {total} jobs found
+                </span>
+                {matched && (
+                  <span className="ml-2 badge badge-green">Resume matched</span>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                <Button
+                  onClick={() => setShowFilters(!showFilters)}
+                  variant={"outline"}
+                >
+                  <SlidersHorizontal size={13} /> Filters
+                </Button>
+                <div className="flex items-center gap-2 bg-white border border-[#e2eaf8] rounded-xl px-3 py-2 shadow-card">
+                  <span className="text-[#7a92c1] text-xs">Sort:</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="bg-transparent text-[#0c1a3a] text-sm outline-none cursor-pointer"
+                  >
+                    <option value="relevance">Relevance</option>
+                    <option value="recent">Most Recent</option>
+                    <option value="salary">Highest Salary</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Active filter pills */}
+            {(selCat ||
+              selTypes.length > 0 ||
+              selExp.length > 0 ||
+              selSal.length > 0) && (
+              <div className="flex flex-wrap gap-2 mb-4">
+                {selCat && (
+                  <span
+                    className="flex items-center gap-1.5 badge badge-blue cursor-pointer"
+                    onClick={() => setSelCat("")}
+                  >
+                    {selCat} <X size={10} />
+                  </span>
+                )}
+                {selTypes.map((t) => (
+                  <span
+                    key={t}
+                    className="flex items-center gap-1.5 badge badge-sky cursor-pointer"
+                    onClick={() => toggleType(t)}
+                  >
+                    {t} <X size={10} />
+                  </span>
+                ))}
+                {selExp.map((e) => (
+                  <span
+                    key={e}
+                    className="flex items-center gap-1.5 badge badge-purple cursor-pointer"
+                    onClick={() => toggleExp(e)}
+                  >
+                    {e} <X size={10} />
+                  </span>
+                ))}
+                {selSal.map((s) => (
+                  <span
+                    key={s}
+                    className="flex items-center gap-1.5 badge badge-green cursor-pointer"
+                    onClick={() => toggleSal(s)}
+                  >
+                    {s} <X size={10} />
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="card p-5 space-y-3">
+                    <div className="skeleton h-10 w-10 rounded-xl" />
+                    <div className="skeleton h-4 w-3/4" />
+                    <div className="skeleton h-3 w-1/2" />
+                    <div className="flex gap-2">
+                      <div className="skeleton h-6 w-16 rounded-full" />
+                      <div className="skeleton h-6 w-16 rounded-full" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : jobs.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {jobs.map((job) => (
+                  <JobCard key={job.id} job={job} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-20 bg-white rounded-2xl border border-[#e2eaf8]">
+                <div className="text-5xl mb-4">🔍</div>
+                <h3
+                  className="text-xl font-bold text-[#0c1a3a] mb-2"
+                  style={{ fontFamily: "Sora,sans-serif" }}
+                >
+                  No jobs found
+                </h3>
+                <p className="text-[#7a92c1] mb-6 text-sm">
+                  Try different keywords or clear filters
+                </p>
+                <Button onClick={clearAll}>Clear All Filters</Button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function JobsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <JobsContent />
+    </Suspense>
+  );
+}

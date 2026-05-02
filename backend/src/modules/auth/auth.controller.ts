@@ -4,13 +4,17 @@ import {
   fetchGoogleProfile,
   findOrCreateGoogleUser,
 } from "./auth.service";
+import { eq } from "drizzle-orm";
+import { db } from "../../db";
+import { users } from "../../db/schema";
 import {
   clearAuthCookie,
   generateToken,
   setAuthCookie,
+  verifyToken,
 } from "../../utils/auth";
 import { sanitizeUser } from "../../utils/user";
-import { googleCallbackUrl, googleClientId } from "../../utils";
+import { googleCallbackUrl, googleClientId, clientUrl } from "../../utils";
 
 export const googleLogin = (req: Request, res: Response): void => {
   const params = new URLSearchParams({
@@ -44,12 +48,12 @@ export const googleCallback = async (
     });
 
     setAuthCookie(res, genereteToken);
-
-    res.status(200).json({
-      success: true,
-      token: genereteToken,
-      user: sanitizeUser(user),
-    });
+    // res.status(200).json({
+    //   success: true,
+    //   token: genereteToken,
+    //   user: sanitizeUser(user),
+    // });
+    res.redirect(clientUrl);
   } catch (error) {
     next(error);
   }
@@ -58,4 +62,39 @@ export const googleCallback = async (
 export const logout = (req: Request, res: Response): void => {
   clearAuthCookie(res);
   res.status(200).json({ success: true, message: "Logged out successfully" });
+};
+
+export const me = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const token = req.cookies.token;
+    if (!token) {
+      res.status(401).json({ success: false, message: "Unauthorized" });
+      return;
+    }
+
+    const payload = verifyToken(token);
+    if (!payload) {
+      res.status(401).json({ success: false, message: "Invalid token" });
+      return;
+    }
+
+    const userRecord = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, payload.id))
+      .limit(1);
+
+    if (!userRecord[0]) {
+      res.status(404).json({ success: false, message: "User not found" });
+      return;
+    }
+
+    res.status(200).json({ success: true, user: sanitizeUser(userRecord[0]) });
+  } catch (error) {
+    next(error);
+  }
 };
