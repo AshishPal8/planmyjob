@@ -76,24 +76,23 @@ export default function Navbar({
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isTransparent
-          ? "bg-transparent"
-          : "bg-white/95 backdrop-blur-xl border-b border-[#e2eaf8] shadow-sm"
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isTransparent
+        ? "bg-transparent"
+        : "bg-white/95 backdrop-blur-xl border-b border-[#e2eaf8] shadow-sm"
+        }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
-            <div className="w-8 h-8 bg-linear-to-br from-blue-600 to-blue-500 rounded-xl flex items-center justify-center shadow-md">
+            <div className="w-8 h-8 bg-linear-to-br from-primary to-primary/90 rounded-xl flex items-center justify-center shadow-md">
               <Briefcase size={15} className="text-white" />
             </div>
             <span
               className="font-display font-bold text-xl text-[#0c1a3a]"
               style={{ fontFamily: "Sora,sans-serif" }}
             >
-              Findur<span className="text-blue-600">Job</span>
+              Findur<span className="text-primary">Job</span>
             </span>
           </Link>
 
@@ -150,11 +149,11 @@ export default function Navbar({
 
                 <DropdownMenu>
                   <DropdownMenuTrigger className="flex items-center gap-2.5 px-3 py-1.5 bg-[#f8fbff] border border-[#e2eaf8] rounded-2xl hover:border-blue-300 hover:shadow-sm transition-all focus:outline-none">
-                    <div className="w-7 h-7 bg-linear-to-br from-primary-600 to-primary-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                    <div className="w-7 h-7 bg-linear-to-br from-primary-600 to-primary-500 rounded-full flex items-center justify-center text-black text-xs font-bold shadow-sm">
                       {user.name?.[0] || "U"}
                     </div>
                     <div className="hidden lg:block text-left">
-                      <p className="text-xs font-bold text-[#0c1a3a] leading-tight">
+                      <p className="text-xs font-bold text-black leading-tight">
                         {user.name}
                       </p>
                       <p className="text-[10px] text-[#7a92c1] leading-tight">
