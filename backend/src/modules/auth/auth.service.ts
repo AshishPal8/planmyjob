@@ -2,18 +2,14 @@ import { eq } from "drizzle-orm";
 import { db } from "../../db";
 import { users } from "../../db/schema";
 import type { GoogleUser } from "./auth.schema";
-import {
-  googleCallbackUrl,
-  googleClientId,
-  googleClientSecret,
-} from "../../utils";
+import { envConfig } from "../../config/env.config";
 
 export const exchangeGoogleCode = async (code: string) => {
   const params = new URLSearchParams({
     code,
-    client_id: googleClientId,
-    client_secret: googleClientSecret,
-    redirect_uri: googleCallbackUrl,
+    client_id: envConfig.google.clientId,
+    client_secret: envConfig.google.clientSecret,
+    redirect_uri: envConfig.google.callbackUrl,
     grant_type: "authorization_code",
   });
 

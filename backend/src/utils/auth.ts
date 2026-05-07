@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import type { Response } from "express";
-import { jwtSecret } from ".";
+import { envConfig } from "../config/env.config";
 
 export interface TokenPayload {
   id: number;
@@ -8,14 +8,14 @@ export interface TokenPayload {
 }
 
 export function generateToken(payload: TokenPayload): string {
-  return jwt.sign(payload, jwtSecret, {
+  return jwt.sign(payload, envConfig.jwt.secret, {
     expiresIn: "30d",
   });
 }
 
 export function verifyToken(token: string): TokenPayload | null {
   try {
-    const decoded = jwt.verify(token, jwtSecret) as TokenPayload;
+    const decoded = jwt.verify(token, envConfig.jwt.secret) as TokenPayload;
     return decoded;
   } catch (error) {
     console.error("Token verification failed:", error);
