@@ -14,12 +14,12 @@ import {
   verifyToken,
 } from "../../utils/auth";
 import { sanitizeUser } from "../../utils/user";
-import { googleCallbackUrl, googleClientId, clientUrl } from "../../utils";
+import { envConfig } from "../../config/env.config";
 
 export const googleLogin = (req: Request, res: Response): void => {
   const params = new URLSearchParams({
-    client_id: googleClientId,
-    redirect_uri: googleCallbackUrl,
+    client_id: envConfig.google.clientId,
+    redirect_uri: envConfig.google.callbackUrl,
     response_type: "code",
     scope: "openid email profile",
     access_type: "offline",
@@ -53,7 +53,7 @@ export const googleCallback = async (
     //   token: genereteToken,
     //   user: sanitizeUser(user),
     // });
-    res.redirect(clientUrl);
+    res.redirect(envConfig.frontendUrl);
   } catch (error) {
     next(error);
   }
