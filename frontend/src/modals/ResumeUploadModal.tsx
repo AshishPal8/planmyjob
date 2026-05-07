@@ -21,11 +21,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import api from "@/lib/axios";
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  onComplete: (skills: string[], experience: string) => void;
+  onComplete: (skills: string[], experience: number, title?: string) => void;
 }
 
 export default function ResumeUploadModal({
@@ -36,19 +37,11 @@ export default function ResumeUploadModal({
   const [step, setStep] = useState<"upload" | "uploading" | "done">("upload");
   const [file, setFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
-  const [skills, setSkills] = useState([
-    "React",
-    "Node.js",
-    "TypeScript",
-    "Tailwind CSS",
-    "Next.js",
-    "MongoDB",
-    "AWS",
-    "Docker",
-  ]);
-  const [experience, setExperience] = useState("4");
-  const [role, setRole] = useState("Full Stack Developer");
-  const [score, setScore] = useState(82);
+  const [skills, setSkills] = useState<string[]>([]);
+  const [experience, setExperience] = useState(0);
+  const [role, setRole] = useState("");
+  const [summary, setSummary] = useState("");
+  const [score, setScore] = useState(0);
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -70,20 +63,39 @@ export default function ResumeUploadModal({
   const upload = async () => {
     if (!file) return;
     setStep("uploading");
+    setError("");
 
     try {
       const formData = new FormData();
       formData.append("resume", file);
 
-      const response = await fetch("https://jsonplaceholder.typicode.com/posts", {
-        method: "POST",
-        body: formData,
+      const response = await api.post("/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
 
-      if (!response.ok) throw new Error("Upload failed");
+      const data = response.data;
+      if (!data.success || !data.data) {
+        throw new Error("Invalid upload response");
+      }
+
+      const { skills: returnedSkills, currentTitle, experienceYears, summary: returnedSummary } = data.data;
+
+      setSkills(Array.isArray(returnedSkills) ? returnedSkills : []);
+      setRole(currentTitle || "Software Engineer");
+      setExperience(typeof experienceYears === "number" ? experienceYears : 0);
+      setSummary(returnedSummary || "");
+      setScore(Math.min(100, 65 + (Array.isArray(returnedSkills) ? returnedSkills.length : 0)));
+
+      onComplete(
+        Array.isArray(returnedSkills) ? returnedSkills : [],
+        typeof experienceYears === "number" ? experienceYears : 0,
+        currentTitle,
+      );
 
       // Small delay for UX transition
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 900));
       setStep("done");
     } catch (err) {
       console.error(err);
@@ -119,7 +131,7 @@ export default function ResumeUploadModal({
           </DialogHeader>
         </div>
 
-        <div className="p-6">
+        <div className="p-6 overflow-y-auto max-h-[calc(100vh-18rem)]">
           {/* Upload step */}
           {step === "upload" && (
             <>
@@ -242,20 +254,61 @@ export default function ResumeUploadModal({
                 <Progress value={score} className="h-2" />
               </div>
 
-              <p className="text-sm font-semibold mb-2.5">
-                ✅ {skills.length} skills detected
-              </p>
-              <div className="flex flex-wrap gap-1.5 mb-5">
-                {skills.map((skill) => (
-                  <Badge
-                    key={skill}
-                    variant="secondary"
-                    className="bg-blue-50 text-blue-700 border-blue-100"
-                  >
-                    {skill}
-                  </Badge>
-                ))}
+              <div className="mb-4">
+                <p className="text-sm font-semibold text-slate-500 mb-2">
+                  Resume analysis results
+                </p>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-base font-semibold text-slate-900">
+                      {role}
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      {experience} years experience
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-slate-100 px-3 py-2 text-sm font-medium text-slate-800">
+                    {skills.length} skills detected
+                  </div>
+                </div>
               </div>
+
+              <div className="mb-5 rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-center justify-between mb-3 gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">
+                      Skills extracted
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      Scroll to view all matched resume skills.
+                    </p>
+                  </div>
+                </div>
+                <div className="max-h-44 overflow-y-auto pr-1">
+                  <div className="flex flex-wrap gap-2">
+                    {skills.map((skill) => (
+                      <Badge
+                        key={skill}
+                        variant="secondary"
+                        className="bg-white text-slate-800 border-slate-200"
+                      >
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {summary ? (
+                <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <p className="text-sm font-semibold text-slate-900 mb-2">
+                    Resume summary
+                  </p>
+                  <div className="max-h-36 overflow-y-auto text-sm text-slate-600 leading-6">
+                    {summary}
+                  </div>
+                </div>
+              ) : null}
 
               <Alert className="mb-5 bg-green-50 border-green-100 text-green-700">
                 <AlertDescription>
@@ -263,7 +316,7 @@ export default function ResumeUploadModal({
                     🎯 Found jobs matched to your profile
                   </p>
                   <p className="text-xs mt-0.5 text-green-600">
-                    Detected {role} with {experience}+ years experience
+                    Detected {role} with {experience} years experience
                   </p>
                 </AlertDescription>
               </Alert>
