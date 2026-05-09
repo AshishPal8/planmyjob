@@ -8,6 +8,9 @@ import { envConfig } from "./config/env.config";
 
 import authRoutes from "./modules/auth/auth.route";
 import uploadRoutes from "./modules/upload/upload.route";
+import jobsRoutes from "./modules/jobs/jobs.route";
+
+import { startAllCrons } from "./cron";
 
 dotenv.config();
 
@@ -33,12 +36,15 @@ app.get("/health", (req, res) => {
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/jobs", jobsRoutes);
 
 // Global Error Handler
 app.use(globalErrorHandler);
 
 (async () => {
   await connectDB();
+
+  // startAllCrons();
 
   app.listen(PORT, () => {
     console.log(`🚀 Server is running on port ${PORT}`);

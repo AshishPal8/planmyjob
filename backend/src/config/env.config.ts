@@ -21,4 +21,7 @@ export const envConfig = {
     publicKey: process.env.IMAGEKIT_PUBLIC_KEY!,
     privateKey: process.env.IMAGEKIT_PRIVATE_KEY!,
   },
+  jsearch: {
+    apiKey: process.env.JSEARCH_API_KEY!,
+  },
 };
