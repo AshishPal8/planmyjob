@@ -221,7 +221,7 @@ export default function Home() {
             </div>
             <Link
               href="/jobs"
-              className="hidden md:flex items-center gap-1 text-blue-600 hover:underline text-sm font-medium"
+              className="hidden md:flex items-center gap-1 text-primary hover:underline text-sm font-medium"
             >
               See all jobs <ArrowRight size={14} />
             </Link>
@@ -261,7 +261,7 @@ export default function Home() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button
                   onClick={() => setShowResume(true)}
-                  className="bg-white text-blue-600 font-semibold px-8 py-4 rounded-xl inline-flex items-center justify-center gap-2 hover:bg-blue-50 transition-colors text-base"
+                  className="bg-white text-primary font-semibold px-8 py-4 rounded-xl inline-flex items-center justify-center gap-2 hover:bg-blue-50 transition-colors text-base"
                 >
                   <Sparkles size={18} /> Upload Resume & Match
                 </button>

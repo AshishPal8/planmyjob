@@ -16,7 +16,7 @@ export default function Footer() {
                 className="text-xl font-bold"
                 style={{ fontFamily: "Sora,sans-serif" }}
               >
-                Findur<span className="text-blue-400">Job</span>
+                Findur<span className="text-primary">Job</span>
               </span>
             </Link>
             <p className="text-blue-100/50 text-sm leading-relaxed mb-5 max-w-xs">

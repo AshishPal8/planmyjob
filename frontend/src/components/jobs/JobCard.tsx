@@ -82,7 +82,7 @@ export default function JobCard({
             {/* Title + company */}
             <div className="min-w-0">
               <h3
-                className="font-semibold text-[#0c1a3a] text-[15px] leading-snug mb-0.5 group-hover:text-blue-600 transition-colors line-clamp-2"
+                className="font-semibold text-[#0c1a3a] text-[15px] leading-snug mb-0.5 group-hover:text-primary transition-colors line-clamp-2"
                 style={{ fontFamily: "Sora,sans-serif" }}
               >
                 {job.title}
@@ -91,27 +91,27 @@ export default function JobCard({
             </div>
           </div>
           {/* Save button */}
-          <button
+          <Button
             onClick={() => setIsSaved(!isSaved)}
             className={`shrink-0 p-1.5 rounded-lg transition-all ${
               isSaved
-                ? "text-blue-600 bg-blue-50"
-                : "text-[#a8bcd8] hover:text-blue-600 hover:bg-blue-50"
+                ? "text-primary bg-primary/20"
+                : "text-[#a8bcd8] hover:text-primary hover:bg-primary/10"
             }`}
             aria-label="Save job"
           >
             {isSaved ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
-          </button>
+          </Button>
         </div>
 
         {/* Meta row */}
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[#7a92c1] mb-3">
           <span className="flex items-center gap-1.5">
-            <MapPin size={12} className="text-blue-500 shrink-0" />
+            <MapPin size={12} className="text-primary shrink-0" />
             <span className="truncate">{job.location}</span>
           </span>
           <span className="flex items-center gap-1.5">
-            <Clock size={12} className="text-blue-500 shrink-0" />
+            <Clock size={12} className="text-primary shrink-0" />
             {job.type}
           </span>
         </div>
@@ -132,7 +132,7 @@ export default function JobCard({
         <div className="mt-auto pt-3 border-t border-[#f0f5ff]">
           <div className="flex items-center justify-between gap-2">
             <div>
-              <span className="text-blue-600 font-bold text-sm">
+              <span className="text-primary font-bold text-sm">
                 {job.salary}
               </span>
               <p className="text-[#a8bcd8] text-xs mt-0.5">{job.posted}</p>
@@ -140,13 +140,13 @@ export default function JobCard({
             <div className="flex items-center gap-2">
               <Link
                 href={`/jobs/${job.id}`}
-                className="text-xs px-3 py-1.5 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                className="text-xs px-3 py-1.5 rounded-lg hover:bg-primary/20 hover:text-primary transition-colors"
               >
                 Details
               </Link>
               <Button
                 onClick={handleApply}
-                className="text-xs px-4 py-1.5 rounded-lg gap-1.5 h-auto bg-blue-600 hover:bg-blue-700 text-white"
+                className="text-xs px-4 py-1.5 rounded-lg gap-1.5 h-auto bg-primary hover:bg-primary/90 text-white"
               >
                 Apply <ExternalLink size={11} />
               </Button>

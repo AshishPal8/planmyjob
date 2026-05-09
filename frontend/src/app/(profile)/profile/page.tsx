@@ -71,7 +71,7 @@ export default function ProfilePage() {
             {/* Avatar */}
             <div className="bg-white border border-[#e2eaf8] rounded-2xl p-6 text-center shadow-card">
               <div className="relative inline-block mb-4">
-                <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center text-white text-3xl font-bold">
+                <div className="w-24 h-24 bg-primary rounded-full flex items-center justify-center text-white text-3xl font-bold">
                   {user.name[0]}
                 </div>
                 <button className="absolute bottom-0 right-0 w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors shadow-md">
