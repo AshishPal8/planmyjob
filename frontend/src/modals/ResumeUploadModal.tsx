@@ -105,9 +105,12 @@ export default function ResumeUploadModal({
   };
 
   const finish = () => {
-    onComplete(skills, experience);
+    onComplete(skills, experience, role);
     onClose();
-    router.push("/jobs?matched=true");
+    const params = new URLSearchParams({ matched: "true" });
+    if (skills.length > 0) params.set("skills", skills.join(","));
+    if (role) params.set("title", role);
+    router.push(`/jobs?${params}`);
   };
 
   return (

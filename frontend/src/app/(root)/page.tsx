@@ -34,7 +34,7 @@ export default function Home() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const params = new URLSearchParams();
-    if (search) params.set("q", search);
+    if (search) params.set("skills", search);
     if (location) params.set("location", location);
     window.location.href = `/jobs?${params}`;
   };
@@ -135,7 +135,7 @@ export default function Home() {
                     type="text"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Job title, skills, or company..."
+                    placeholder="Skills (e.g. react, next.js, python)"
                     className="bg-transparent w-full text-[#0c1a3a] placeholder-[#a8bcd8] outline-none text-sm"
                   />
                 </div>
@@ -172,18 +172,18 @@ export default function Home() {
             <div className="flex flex-wrap items-center gap-2 mt-6 text-sm">
               <span className="text-[#7a92c1]">Trending:</span>
               {[
-                "React Developer",
-                "Product Manager",
-                "Data Scientist",
-                "DevOps Engineer",
-                "UI Designer",
-              ].map((t) => (
+                { label: "React Developer", skills: "React" },
+                { label: "Product Manager", skills: "Product Management" },
+                { label: "Data Scientist", skills: "Python,Machine Learning" },
+                { label: "DevOps Engineer", skills: "Docker,Kubernetes" },
+                { label: "UI Designer", skills: "Figma,UI Design" },
+              ].map(({ label, skills }) => (
                 <Link
-                  key={t}
-                  href={`/jobs?q=${encodeURIComponent(t)}`}
+                  key={label}
+                  href={`/jobs?skills=${encodeURIComponent(skills)}`}
                   className="px-3 py-1.5 bg-white border border-[#e2eaf8] text-[#2d4070] rounded-xl text-xs font-medium hover:border-blue-300 hover:text-blue-600 transition-all"
                 >
-                  {t}
+                  {label}
                 </Link>
               ))}
             </div>
