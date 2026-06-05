@@ -1,4 +1,4 @@
-import { eq, inArray, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "../../db";
 import { jobs } from "../../db/schema/job.schema";
 import type { NormalizedJob } from "../scraper/scraper.schema";
@@ -124,63 +124,120 @@ export const matchJobsToSkills = async (skills: string[], limit = 20) => {
 
 export const getJobsService = async (filters: GetJobsInput) => {
   const { title, skills, locations, jobType, page, pageSize } = filters;
-
   const offset = (page - 1) * pageSize;
-  const normalizedSkills = skills.map((s) => s.toLowerCase().trim());
+
+  const normalizedSkills = [
+    ...new Set(skills.map((s) => s.toLowerCase().trim()).filter(Boolean)),
+  ];
+
+  const titleWords = [
+    ...new Set(
+      (title ?? "")
+        .toLowerCase()
+        .split(/[\s,/\-()]+/)
+        .map((w) => w.trim())
+        .filter((w) => w.length > 2),
+    ),
+  ];
+
+  const allTerms = [...new Set([...normalizedSkills, ...titleWords])];
 
   const conditions = [
     sql`${jobs.isActive}  = true`,
     sql`${jobs.isDeleted} = false`,
   ];
 
-  if (title?.trim()) {
-    conditions.push(sql`${jobs.title} ILIKE ${`%${title.trim()}%`}`);
-  }
-
   if (jobType) {
     conditions.push(sql`${jobs.jobType} = ${jobType}::job_type`);
   }
 
   if (locations.length > 0) {
-    conditions.push(sql`
-      (${sql.join(
+    conditions.push(
+      sql`(${sql.join(
         locations.map((loc) => sql`${jobs.location} ILIKE ${`%${loc}%`}`),
         sql` OR `,
-      )})
-    `);
+      )})`,
+    );
   }
 
-  if (normalizedSkills.length > 0) {
-    conditions.push(sql`
-      ${jobs.skills} && ARRAY[
-        ${sql.join(
-          normalizedSkills.map((s) => sql`${s}`),
-          sql`, `,
-        )}
-      ]::text[]
-    `);
+  if (allTerms.length > 0) {
+    conditions.push(
+      sql`(${sql.join(
+        allTerms.map(
+          (term) =>
+            sql`(
+              EXISTS (SELECT 1 FROM unnest(${jobs.skills}) AS s WHERE lower(s) = ${term})
+              OR ${jobs.title}       ILIKE ${`%${term}%`}
+              OR ${jobs.description} ILIKE ${`%${term}%`}
+            )`,
+        ),
+        sql` OR `,
+      )})`,
+    );
   }
 
-  const result = await db
-    .select()
+  const candidates = await db
+    .select({
+      id: jobs.id,
+      title: jobs.title,
+      slug: jobs.slug,
+      company: jobs.company,
+      location: jobs.location,
+      skills: jobs.skills,
+      salary: jobs.salary,
+      jobType: jobs.jobType,
+      applyUrl: jobs.applyUrl,
+      sourceUrl: jobs.sourceUrl,
+      postedAt: jobs.postedAt,
+      description: jobs.description,
+    })
     .from(jobs)
-    .where(sql.join(conditions, sql` AND `));
+    .where(sql.join(conditions, sql` AND `))
+    .limit(300);
 
-  /**
-   * Score and rank in JS after fetching.
-   * Sort by: 1) match score desc 2) newest first
-   */
-  const ranked = result
-    .map((job) => {
-      const jobSkills = (job.skills ?? []).map((s) => s.toLowerCase());
-      const matchedSkills = normalizedSkills.filter((s) =>
-        jobSkills.includes(s),
-      );
+  const normalize = (s: string) => s.replace(/[\s.\-_]/g, "").toLowerCase();
+
+  const ranked = candidates
+    .map(({ description, ...card }) => {
+      const jobSkillsNorm = (card.skills ?? []).map(normalize);
+      const jobTitleLower = (card.title ?? "").toLowerCase();
+      const jobDescLower = (description ?? "").toLowerCase();
+
+      let score = 0;
+      let maxScore = 0;
+      const matchedSkills: string[] = [];
+
+      for (const skill of normalizedSkills) {
+        maxScore += 10;
+        const skillNorm = normalize(skill);
+
+        if (jobSkillsNorm.includes(skillNorm)) {
+          score += 10;
+          matchedSkills.push(skill);
+        } else if (
+          jobSkillsNorm.some(
+            (s) => s.includes(skillNorm) || skillNorm.includes(s),
+          )
+        ) {
+          score += 7;
+          matchedSkills.push(skill);
+        } else if (jobTitleLower.includes(skill)) {
+          score += 5;
+        } else if (jobDescLower.includes(skill)) {
+          score += 2;
+        }
+      }
+
+      for (const word of titleWords) {
+        maxScore += 4;
+        if (jobTitleLower.includes(word)) score += 4;
+        else if (jobDescLower.includes(word)) score += 1;
+      }
+
       const matchScore =
-        normalizedSkills.length > 0
-          ? Math.round((matchedSkills.length / normalizedSkills.length) * 100)
-          : 0;
-      return { ...job, matchedSkills, matchScore };
+        maxScore > 0 ? Math.min(100, Math.round((score / maxScore) * 100)) : 0;
+
+      return { ...card, matchedSkills, matchScore };
     })
     .sort((a, b) => {
       if (b.matchScore !== a.matchScore) return b.matchScore - a.matchScore;
@@ -196,4 +253,20 @@ export const getJobsService = async (filters: GetJobsInput) => {
     pageSize,
     jobs: ranked.slice(offset, offset + pageSize),
   };
+};
+
+export const getJobBySlugService = async (slug: string) => {
+  const rows = await db
+    .select()
+    .from(jobs)
+    .where(
+      and(
+        eq(jobs.slug, slug),
+        eq(jobs.isActive, true),
+        eq(jobs.isDeleted, false),
+      ),
+    )
+    .limit(1);
+
+  return rows[0] ?? null;
 };

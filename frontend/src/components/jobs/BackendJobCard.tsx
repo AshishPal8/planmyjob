@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import {
   MapPin,
   Clock,
@@ -10,72 +11,21 @@ import {
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  type BackendJob,
+  JOB_TYPE_LABELS,
+  formatPostedDate,
+  getApplyUrl,
+  getLogoColor,
+} from "@/lib/jobs";
 
-export interface BackendJob {
-  id: number;
-  title: string;
-  slug: string;
-  company: string;
-  companyLogo: string | null;
-  companyDomain: string | null;
-  location: string | null;
-  description: string | null;
-  skills: string[];
-  salary: string | null;
-  jobType: string;
-  source: string;
-  sourceUrl: string | null;
-  applyUrl: string | null;
-  postedAt: string | null;
-  createdAt: string;
-  matchScore: number;
-  matchedSkills: string[];
-}
-
-const JOB_TYPE_LABELS: Record<string, string> = {
-  full_time: "Full-time",
-  part_time: "Part-time",
-  contract: "Contract",
-  freelance: "Freelance",
-  internship: "Internship",
-  remote: "Remote",
-};
-
-const LOGO_COLORS = [
-  "#4285F4",
-  "#EA4335",
-  "#0F9D58",
-  "#F4B400",
-  "#7B68EE",
-  "#FF6B35",
-  "#2196F3",
-  "#9C27B0",
-];
-
-function getLogoColor(company: string): string {
-  let hash = 0;
-  for (let i = 0; i < company.length; i++) {
-    hash = company.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return LOGO_COLORS[Math.abs(hash) % LOGO_COLORS.length];
-}
-
-function formatPostedDate(dateStr: string | null): string {
-  if (!dateStr) return "Recently posted";
-  const days = Math.floor(
-    (Date.now() - new Date(dateStr).getTime()) / 86400000,
-  );
-  if (days === 0) return "Today";
-  if (days === 1) return "1 day ago";
-  if (days < 7) return `${days} days ago`;
-  if (days < 30) return `${Math.floor(days / 7)} weeks ago`;
-  return `${Math.floor(days / 30)} months ago`;
-}
+export type { BackendJob };
 
 export default function BackendJobCard({ job }: { job: BackendJob }) {
   const [saved, setSaved] = useState(false);
   const logoColor = getLogoColor(job.company);
-  const applyUrl = job.applyUrl || job.sourceUrl || "#";
+  const applyUrl = getApplyUrl(job);
+  const skills = job.skills ?? [];
 
   return (
     <Card className="p-6 border-[#e2eaf8] shadow-sm hover:shadow-md hover:border-blue-200 transition-all group flex flex-col h-full bg-white">
@@ -118,7 +68,7 @@ export default function BackendJobCard({ job }: { job: BackendJob }) {
             className={`shrink-0 p-1.5 rounded-lg transition-all ${
               saved
                 ? "text-primary bg-primary/20"
-                : "text-white hover:text-primary hover:bg-primary/10"
+                : "text-[#a8bcd8] hover:text-primary hover:bg-primary/10"
             }`}
             aria-label="Save job"
           >
@@ -133,18 +83,18 @@ export default function BackendJobCard({ job }: { job: BackendJob }) {
           </span>
           <span className="flex items-center gap-1.5">
             <Clock size={12} className="text-primary shrink-0" />
-            {JOB_TYPE_LABELS[job.jobType] ?? job.jobType}
+            {JOB_TYPE_LABELS[job.jobType ?? ""] ?? job.jobType}
           </span>
         </div>
 
         <div className="flex flex-wrap gap-1.5 mb-4">
-          {job.skills.slice(0, 4).map((skill) => (
+          {skills.slice(0, 4).map((skill) => (
             <span key={skill} className="tag">
               {skill}
             </span>
           ))}
-          {job.skills.length > 4 && (
-            <span className="tag">+{job.skills.length - 4}</span>
+          {skills.length > 4 && (
+            <span className="tag">+{skills.length - 4}</span>
           )}
         </div>
 
@@ -158,14 +108,22 @@ export default function BackendJobCard({ job }: { job: BackendJob }) {
                 {formatPostedDate(job.postedAt)}
               </p>
             </div>
-            <Button
-              onClick={() =>
-                window.open(applyUrl, "_blank", "noopener,noreferrer")
-              }
-              className="text-xs px-4 py-1.5 rounded-lg gap-1.5 h-auto bg-primary hover:bg-primary/90 text-white"
-            >
-              Apply <ExternalLink size={11} />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Link
+                href={`/jobs/${job.slug}`}
+                className="text-xs px-3 py-1.5 rounded-lg hover:bg-primary/10 hover:text-primary text-[#7a92c1] transition-colors"
+              >
+                Details
+              </Link>
+              <Button
+                onClick={() =>
+                  window.open(applyUrl, "_blank", "noopener,noreferrer")
+                }
+                className="text-xs px-4 py-1.5 rounded-lg gap-1.5 h-auto bg-primary hover:bg-primary/90 text-white"
+              >
+                Apply <ExternalLink size={11} />
+              </Button>
+            </div>
           </div>
         </div>
       </div>

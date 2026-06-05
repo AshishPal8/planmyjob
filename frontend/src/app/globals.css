@@ -171,3 +171,16 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Job description HTML content (from Remotive / external APIs) */
+.job-description p        { margin-bottom: 0.75rem; color: #2d4070; font-size: 0.875rem; line-height: 1.7; }
+.job-description ul,
+.job-description ol       { margin: 0.75rem 0 0.75rem 1.25rem; color: #2d4070; font-size: 0.875rem; line-height: 1.7; }
+.job-description li       { margin-bottom: 0.35rem; }
+.job-description strong,
+.job-description b        { color: #0c1a3a; font-weight: 600; }
+.job-description h1,
+.job-description h2,
+.job-description h3       { color: #0c1a3a; font-weight: 700; margin: 1.25rem 0 0.5rem; font-family: Sora, sans-serif; }
+.job-description a        { color: #3b82f6; text-decoration: underline; }
+.job-description hr       { border-color: #e2eaf8; margin: 1rem 0; }
