@@ -2,28 +2,51 @@
 import { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Search, MapPin, X, SlidersHorizontal, Sparkles } from "lucide-react";
-import BackendJobCard, { type BackendJob } from "@/components/jobs/BackendJobCard";
+import BackendJobCard from "@/components/jobs/BackendJobCard";
+import type { BackendJob } from "@/lib/jobs";
 import ResumeUploadModal from "@/modals/ResumeUploadModal";
 import { categories } from "@/data";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/axios";
 
-const JOB_TYPES = ["Full-time", "Part-time", "Contract", "Internship", "Remote"];
+const JOB_TYPES = [
+  "Full-time",
+  "Part-time",
+  "Contract",
+  "Internship",
+  "Remote",
+];
 
 const JOB_TYPE_MAP: Record<string, string> = {
   "Full-time": "full_time",
   "Part-time": "part_time",
-  "Contract": "contract",
-  "Internship": "internship",
-  "Remote": "remote",
+  Contract: "contract",
+  Internship: "internship",
+  Remote: "remote",
 };
 
 const CATEGORY_KEYWORDS: Record<string, string[]> = {
-  Engineering: ["engineer", "developer", "programmer", "backend", "frontend", "fullstack", "software"],
+  Engineering: [
+    "engineer",
+    "developer",
+    "programmer",
+    "backend",
+    "frontend",
+    "fullstack",
+    "software",
+  ],
   Product: ["product", "pm", "product manager"],
   Design: ["design", "ui", "ux", "graphic"],
   Marketing: ["marketing", "growth", "seo", "content", "brand"],
-  Data: ["data", "analyst", "scientist", "analytics", "machine learning", "ml", "ai"],
+  Data: [
+    "data",
+    "analyst",
+    "scientist",
+    "analytics",
+    "machine learning",
+    "ml",
+    "ai",
+  ],
   Sales: ["sales", "account", "business development"],
   Finance: ["finance", "fintech", "accounting", "financial"],
   HR: ["hr", "human resource", "recruiter", "talent"],
@@ -86,13 +109,13 @@ function JobsContent() {
     if (selCat && CATEGORY_KEYWORDS[selCat]) {
       const kws = CATEGORY_KEYWORDS[selCat];
       result = result.filter((j) =>
-        kws.some((kw) => j.title.toLowerCase().includes(kw))
+        kws.some((kw) => j.title.toLowerCase().includes(kw)),
       );
     }
 
     if (selTypes.length > 0) {
       result = result.filter((j) =>
-        selTypes.some((t) => JOB_TYPE_MAP[t] === j.jobType)
+        selTypes.some((t) => JOB_TYPE_MAP[t] === j.jobType),
       );
     }
 
@@ -100,7 +123,7 @@ function JobsContent() {
       result = [...result].sort(
         (a, b) =>
           new Date(b.postedAt ?? 0).getTime() -
-          new Date(a.postedAt ?? 0).getTime()
+          new Date(a.postedAt ?? 0).getTime(),
       );
     }
 
@@ -137,7 +160,6 @@ function JobsContent() {
         />
       )}
 
-      {/* Search header */}
       <section className="pt-20 pb-6 bg-white border-b border-[#e2eaf8]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
@@ -163,7 +185,6 @@ function JobsContent() {
             </Button>
           </div>
 
-          {/* Search bar */}
           <div className="bg-[#f8fbff] border border-[#e2eaf8] rounded-2xl p-2 flex flex-col sm:flex-row gap-2">
             <div className="flex items-center gap-2.5 flex-1 px-3 py-1.5">
               <Search size={15} className="text-blue-500 shrink-0" />
@@ -199,7 +220,6 @@ function JobsContent() {
             <Button onClick={handleSearch}>Search</Button>
           </div>
 
-          {/* Active search pills */}
           {(skillsInput || location) && (
             <div className="flex flex-wrap gap-2 mt-3">
               {skillsInput
@@ -221,7 +241,6 @@ function JobsContent() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex gap-7">
-          {/* Sidebar filters */}
           <aside
             className={`${showFilters ? "block" : "hidden"} lg:block w-60 shrink-0`}
           >
@@ -303,7 +322,6 @@ function JobsContent() {
             </div>
           </aside>
 
-          {/* Jobs list */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
               <div>
@@ -335,7 +353,6 @@ function JobsContent() {
               </div>
             </div>
 
-            {/* Active filter pills */}
             {(selCat || selTypes.length > 0) && (
               <div className="flex flex-wrap gap-2 mb-4">
                 {selCat && (
