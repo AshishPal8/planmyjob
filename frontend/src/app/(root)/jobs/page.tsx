@@ -1,8 +1,9 @@
 "use client";
-import { useState, useEffect, useMemo, Suspense } from "react";
+import { useState, useEffect, useMemo, Suspense, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { Search, MapPin, X, SlidersHorizontal, Sparkles } from "lucide-react";
 import BackendJobCard from "@/components/jobs/BackendJobCard";
+import JobCardSkeleton from "@/components/jobs/JobCardSkeleton";
 import type { BackendJob } from "@/lib/jobs";
 import ResumeUploadModal from "@/modals/ResumeUploadModal";
 import { categories } from "@/data";
@@ -52,11 +53,16 @@ const CATEGORY_KEYWORDS: Record<string, string[]> = {
   HR: ["hr", "human resource", "recruiter", "talent"],
 };
 
+const PAGE_SIZE = 30;
+
 function JobsContent() {
   const searchParams = useSearchParams();
 
   const [allJobs, setAllJobs] = useState<BackendJob[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalFromApi, setTotalFromApi] = useState(0);
   const [matched, setMatched] = useState(false);
   const [matchedTitle, setMatchedTitle] = useState("");
   const [skillsInput, setSkillsInput] = useState("");
@@ -67,27 +73,71 @@ function JobsContent() {
   const [showResume, setShowResume] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
-  const callApi = async (skills: string, loc: string, title = "") => {
-    setLoading(true);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  // store current search params so the observer callback always has fresh values
+  const searchParamsRef = useRef({ skills: "", loc: "", title: "" });
+
+  const hasMore = allJobs.length < totalFromApi;
+
+  const callApi = useCallback(async (skills: string, loc: string, title = "", page = 1) => {
+    searchParamsRef.current = { skills, loc, title };
+
+    if (page === 1) {
+      setLoading(true);
+      setCurrentPage(1);
+    } else {
+      setLoadingMore(true);
+    }
+
     const skillsArr = skills
       .split(",")
       .map((s) => s.trim())
       .filter(Boolean);
+
     try {
       const res = await api.post("/jobs/match", {
         title,
         skills: skillsArr,
         locations: loc ? [loc] : [],
-        page: 1,
-        pageSize: 30,
+        page,
+        pageSize: PAGE_SIZE,
       });
-      setAllJobs(res.data?.data?.jobs ?? []);
+      const jobs: BackendJob[] = res.data?.data?.jobs ?? [];
+      const total: number = res.data?.data?.total ?? 0;
+
+      setTotalFromApi(total);
+      if (page === 1) {
+        setAllJobs(jobs);
+      } else {
+        setAllJobs((prev) => [...prev, ...jobs]);
+        setCurrentPage(page);
+      }
     } catch {
-      setAllJobs([]);
+      if (page === 1) setAllJobs([]);
     } finally {
-      setLoading(false);
+      if (page === 1) setLoading(false);
+      else setLoadingMore(false);
     }
-  };
+  }, []);
+
+  // Infinite scroll: observe sentinel, load next page when it enters viewport
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel || !hasMore || loadingMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          const { skills, loc, title } = searchParamsRef.current;
+          callApi(skills, loc, title, currentPage + 1);
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore, currentPage, callApi]);
 
   useEffect(() => {
     const skills = searchParams.get("skills") || "";
@@ -378,23 +428,34 @@ function JobsContent() {
             {loading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {[...Array(6)].map((_, i) => (
-                  <div key={i} className="card p-5 space-y-3">
-                    <div className="skeleton h-10 w-10 rounded-xl" />
-                    <div className="skeleton h-4 w-3/4" />
-                    <div className="skeleton h-3 w-1/2" />
-                    <div className="flex gap-2">
-                      <div className="skeleton h-6 w-16 rounded-full" />
-                      <div className="skeleton h-6 w-16 rounded-full" />
-                    </div>
-                  </div>
+                  <JobCardSkeleton key={i} />
                 ))}
               </div>
             ) : displayedJobs.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {displayedJobs.map((job) => (
-                  <BackendJobCard key={job.id} job={job} />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {displayedJobs.map((job) => (
+                    <BackendJobCard key={job.id} job={job} />
+                  ))}
+                </div>
+
+                {/* Sentinel div — IntersectionObserver watches this to trigger next page */}
+                {hasMore && <div ref={sentinelRef} className="h-4 mt-4" />}
+
+                {loadingMore && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+                    {[...Array(4)].map((_, i) => (
+                      <JobCardSkeleton key={i} />
+                    ))}
+                  </div>
+                )}
+
+                {!hasMore && (
+                  <p className="text-center text-sm text-[#7a92c1] py-6">
+                    All {totalFromApi} jobs loaded
+                  </p>
+                )}
+              </>
             ) : (
               <div className="text-center py-20 bg-white rounded-2xl border border-[#e2eaf8]">
                 <div className="text-5xl mb-4">🔍</div>

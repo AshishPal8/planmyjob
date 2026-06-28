@@ -12,6 +12,7 @@ import JobCard from "@/components/jobs/JobCard";
 import ResumeUploadModal from "@/modals/ResumeUploadModal";
 import { jobs as allJobs, stats } from "@/data";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [showResume, setShowResume] = useState(false);
@@ -20,6 +21,7 @@ export default function Home() {
   );
   const [search, setSearch] = useState("");
   const [location, setLocation] = useState("");
+  const router = useRouter()
 
   useEffect(() => {
     // Show resume modal for new visitors after 1.5s
@@ -36,7 +38,7 @@ export default function Home() {
     const params = new URLSearchParams();
     if (search) params.set("skills", search);
     if (location) params.set("location", location);
-    window.location.href = `/jobs?${params}`;
+    router.push(`/jobs?${params.toString()}`);
   };
 
   const handleResumeComplete = (skills: string[]) => {

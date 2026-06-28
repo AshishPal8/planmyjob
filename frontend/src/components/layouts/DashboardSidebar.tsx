@@ -28,16 +28,17 @@ const navItems = [
 export default function DashboardSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user, logout: clearAuth } = useAuthStore();
 
   if (!user) return null;
 
-  const logout = async () => {
+  const handleLogout = async () => {
     try {
       await api.post("/auth/logout");
     } catch (err) {
       console.error("Logout failed", err);
     } finally {
+      clearAuth();
       router.push("/");
     }
   };
@@ -110,7 +111,7 @@ export default function DashboardSidebar() {
       {/* Sign out */}
       <div className="px-3 py-4 border-t border-[#e2eaf8]">
         <button
-          onClick={logout}
+          onClick={handleLogout}
           className="sidebar-item w-full hover:text-red-500 hover:bg-red-50"
         >
           <LogOut size={16} />
