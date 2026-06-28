@@ -173,6 +173,20 @@
 }
 
 /* Job description HTML content (from Remotive / external APIs) */
+/* Shimmer skeleton — YouTube-style */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #e8f0fe 25%, #d4e2f8 50%, #e8f0fe 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 0.375rem;
+}
+
+/* Job description HTML content (from Remotive / external APIs) */
 .job-description p        { margin-bottom: 0.75rem; color: #2d4070; font-size: 0.875rem; line-height: 1.7; }
 .job-description ul,
 .job-description ol       { margin: 0.75rem 0 0.75rem 1.25rem; color: #2d4070; font-size: 0.875rem; line-height: 1.7; }

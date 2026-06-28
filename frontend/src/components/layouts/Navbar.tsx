@@ -40,6 +40,8 @@ export default function Navbar({
   const loginModal = useLoginModal();
   const { user, setAuth } = useAuthStore();
 
+  console.log({user})
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener("scroll", onScroll);
@@ -62,13 +64,17 @@ export default function Navbar({
       });
   }, []);
 
-  const logout = async () => {
+  const { logout: clearAuth } = useAuthStore();
+
+  const handleLogout = async () => {
     try {
       await api.post("/auth/logout");
-      router.refresh();
+      clearAuth();
+      router.push("/");
     } catch (err) {
       console.error("Logout failed", err);
-      router.refresh();
+      clearAuth();
+      router.push("/");
     }
   };
 
@@ -149,9 +155,20 @@ export default function Navbar({
 
                 <DropdownMenu>
                   <DropdownMenuTrigger className="flex items-center gap-2.5 px-3 py-1.5 bg-[#f8fbff] border border-[#e2eaf8] rounded-2xl hover:border-blue-300 hover:shadow-sm transition-all focus:outline-none">
-                    <div className="w-7 h-7 bg-linear-to-br from-primary-600 to-primary-500 rounded-full flex items-center justify-center text-black text-xs font-bold shadow-sm">
-                      {user.name?.[0] || "U"}
-                    </div>
+                    {user.profilePicture ? (
+                        <Avatar className="w-8 h-8">
+                          <AvatarImage
+                            src={user?.profilePicture || ""}
+                            alt={user?.name || "Profile"}
+                          />
+                        </Avatar>
+                      ) : (
+                        <Avatar className="w-8 h-8">
+                          <AvatarFallback className="text-xs bg-primary rounded-full flex items-center justify-center text-white font-bold">
+                            {user?.name?.[0]?.toUpperCase() || "A"}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
                     <div className="hidden lg:block text-left">
                       <p className="text-xs font-bold text-black leading-tight">
                         {user.name}
@@ -233,7 +250,7 @@ export default function Navbar({
 
                     <DropdownMenuItem
                       className="rounded-xl px-3 py-2.5 cursor-pointer text-red-500 hover:text-red-600 hover:bg-red-50 focus:text-red-600 focus:bg-red-50"
-                      onClick={logout}
+                      onClick={handleLogout}
                     >
                       <div className="flex items-center gap-3 w-full transition-all group">
                         <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center group-hover:bg-red-100 transition-colors">
@@ -308,7 +325,7 @@ export default function Navbar({
                     "w-full rounded-xl text-red-500 hover:text-red-600 hover:bg-red-50",
                   )}
                   onClick={() => {
-                    logout();
+                    handleLogout();
                     setOpen(false);
                   }}
                 >
