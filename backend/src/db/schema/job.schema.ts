@@ -8,6 +8,7 @@ import {
   pgEnum,
 } from "drizzle-orm/pg-core";
 
+
 export const jobTypeEnum = pgEnum("job_type", [
   "full_time",
   "part_time",
@@ -45,6 +46,8 @@ export const jobs = pgTable("jobs", {
   source: jobSourceEnum("job_source").notNull().default("manual"),
   sourceId: text("source_id").unique(),
   sourceUrl: text("source_url"),
+
+  applyCount: integer("apply_count").default(0).notNull(),
 
   isActive: boolean("is_active").default(true).notNull(),
   isDeleted: boolean("is_deleted").default(false).notNull(),

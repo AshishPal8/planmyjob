@@ -9,6 +9,8 @@ import { envConfig } from "./config/env.config";
 import authRoutes from "./modules/auth/auth.route";
 import uploadRoutes from "./modules/upload/upload.route";
 import jobsRoutes from "./modules/jobs/jobs.route";
+import userRoutes from "./modules/user/user.route";
+import searchRoutes from "./modules/search/search.route";
 
 import { startAllCrons } from "./cron";
 
@@ -37,6 +39,8 @@ app.get("/health", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/jobs", jobsRoutes);
+app.use("/api/user", userRoutes);
+app.use("/api/search", searchRoutes);
 
 // Global Error Handler
 app.use(globalErrorHandler);
