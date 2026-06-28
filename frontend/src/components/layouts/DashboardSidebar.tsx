@@ -50,7 +50,7 @@ export default function DashboardSidebar() {
       {/* Logo */}
       <div className="px-6 py-5 border-b border-[#e2eaf8]">
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center">
+          <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center">
             <Briefcase size={15} className="text-white" />
           </div>
           <span
@@ -65,7 +65,7 @@ export default function DashboardSidebar() {
       {/* User info */}
       <div className="px-4 py-4 border-b border-[#e2eaf8]">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0">
+          <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0">
             {user.name?.[0] ?? "U"}
           </div>
           <div className="min-w-0">
@@ -100,7 +100,7 @@ export default function DashboardSidebar() {
             <item.icon size={16} />
             {item.label}
             {item.label === "Applications" && (
-              <span className="ml-auto w-5 h-5 bg-blue-600 rounded-full text-white text-[10px] flex items-center justify-center">
+              <span className="ml-auto w-5 h-5 bg-primary rounded-full text-white text-[10px] flex items-center justify-center">
                 2
               </span>
             )}
@@ -114,7 +114,7 @@ export default function DashboardSidebar() {
           onClick={handleLogout}
           className="sidebar-item w-full hover:text-red-500 hover:bg-red-50"
         >
-          <LogOut size={16} />
+          <LogOut size={16}  />
           Sign Out
         </button>
       </div>

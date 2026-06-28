@@ -12,6 +12,7 @@ import JobCard from "@/components/jobs/JobCard";
 import ResumeUploadModal from "@/modals/ResumeUploadModal";
 import { jobs as allJobs, stats } from "@/data";
 import { Button } from "@/components/ui/button";
+import AutocompleteInput from "@/components/ui/AutocompleteInput";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
@@ -131,27 +132,26 @@ export default function Home() {
             {/* Search bar */}
             <form onSubmit={handleSearch}>
               <div className="bg-white border border-[#e2eaf8] rounded-2xl p-2 flex flex-col sm:flex-row gap-2 mb-4 shadow-card-lg">
-                <div className="flex items-center gap-2.5 flex-1 px-3 py-1">
-                  <Search size={16} className="text-blue-500 shrink-0" />
-                  <input
-                    type="text"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Skills (e.g. react, next.js, python)"
-                    className="bg-transparent w-full text-[#0c1a3a] placeholder-[#a8bcd8] outline-none text-sm"
-                  />
-                </div>
+                <AutocompleteInput
+                  value={search}
+                  onChange={setSearch}
+                  endpoint="/search/skills"
+                  buildLabel={(item) => item.name}
+                  placeholder="Skills (e.g. react, next.js, python)"
+                  icon={<Search size={16} className="text-primary" />}
+                  minChars={1}
+                />
                 <div className="hidden sm:block w-px bg-[#e2eaf8] self-stretch my-1" />
-                <div className="flex items-center gap-2.5 flex-1 px-3 py-1">
-                  <MapPin size={16} className="text-blue-500 shrink-0" />
-                  <input
-                    type="text"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder="City, state or remote..."
-                    className="bg-transparent w-full text-[#0c1a3a] placeholder-[#a8bcd8] outline-none text-sm"
-                  />
-                </div>
+                <AutocompleteInput
+                  value={location}
+                  onChange={setLocation}
+                  endpoint="/search/cities"
+                  buildLabel={(item) => item.name}
+                  buildSublabel={(item) => item.state}
+                  placeholder="City, state or remote..."
+                  icon={<MapPin size={16} className="text-primary" />}
+                  minChars={2}
+                />
                 <Button type="submit">
                   Search Jobs <ArrowRight size={15} />
                 </Button>

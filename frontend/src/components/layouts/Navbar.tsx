@@ -8,7 +8,6 @@ import {
   X,
   Briefcase,
   ChevronDown,
-  Bell,
   User,
   LogOut,
   LayoutDashboard,
@@ -103,47 +102,29 @@ export default function Navbar({
           </Link>
 
           {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-6">
-            <Link href="/jobs" className="nav-link">
+          <div className="hidden lg:flex items-center gap-4">
+            {/* <Link href="/recommended-jobs" className="nav-link text-sm">
+              Recommended Jobs
+            </Link> */}
+            <Link href="/jobs" className="nav-link text-sm">
               Find Jobs
             </Link>
-            <Link href="/companies" className="nav-link">
-              Companies
+            <Link href="/match-resume" className="nav-link text-sm">
+              Match My Resume
             </Link>
-            <DropdownMenu>
-              <DropdownMenuTrigger className="nav-link flex items-center gap-1 focus:outline-none data-[state=open]:text-blue-600">
-                Resources <ChevronDown size={13} />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="w-52 rounded-2xl p-2 border-[#e2eaf8] shadow-lg"
-              >
-                {[
-                  ["Resume Builder", "#"],
-                  ["Career Blog", "#"],
-                  ["Salary Guide", "#"],
-                  ["Interview Tips", "#"],
-                ].map(([label, href]) => (
-                  <DropdownMenuItem
-                    key={label}
-                    render={<Link href={href} />}
-                    className="rounded-xl px-3 py-2.5 text-sm text-[#2d4070] cursor-pointer hover:bg-blue-50 hover:text-blue-600 focus:bg-blue-50 focus:text-blue-600"
-                  >
-                    {label}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Link href="#" className="nav-link">
-              For Employers
+            <Link href="/about" className="nav-link text-sm">
+              About Us
+            </Link>
+            <Link href="/contact" className="nav-link text-sm">
+              Contact Us
             </Link>
           </div>
 
           {/* Right actions */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-3">
             {user ? (
               <>
-                <Link
+                {/* <Link
                   href="/dashboard"
                   className={cn(
                     buttonVariants({ variant: "ghost", size: "icon" }),
@@ -151,7 +132,7 @@ export default function Navbar({
                   )}
                 >
                   <Bell size={16} />
-                </Link>
+                </Link> */}
 
                 <DropdownMenu>
                   <DropdownMenuTrigger className="flex items-center gap-2.5 px-3 py-1.5 bg-[#f8fbff] border border-[#e2eaf8] rounded-2xl hover:border-blue-300 hover:shadow-sm transition-all focus:outline-none">
@@ -233,12 +214,9 @@ export default function Navbar({
                           render={<Link href={item.href} />}
                           className="rounded-xl px-3 py-2.5 cursor-pointer"
                         >
-                          <div className="flex items-center gap-3 text-sm text-[#2d4070] hover:text-blue-600 hover:bg-blue-50 transition-all group w-full">
-                            <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                              <item.icon
-                                size={14}
-                                className="group-hover:text-blue-600"
-                              />
+                          <div className="flex items-center gap-3 text-sm text-[#2d4070] w-full">
+                            <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center">
+                              <item.icon size={14} />
                             </div>
                             <span className="font-medium">{item.label}</span>
                           </div>
@@ -249,11 +227,11 @@ export default function Navbar({
                     <DropdownMenuSeparator className="my-2 bg-[#f0f5ff]" />
 
                     <DropdownMenuItem
-                      className="rounded-xl px-3 py-2.5 cursor-pointer text-red-500 hover:text-red-600 hover:bg-red-50 focus:text-red-600 focus:bg-red-50"
+                      className="rounded-xl px-3 py-2.5 cursor-pointer text-red-500"
                       onClick={handleLogout}
                     >
-                      <div className="flex items-center gap-3 w-full transition-all group">
-                        <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center group-hover:bg-red-100 transition-colors">
+                      <div className="flex items-center gap-3 w-full">
+                        <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
                           <LogOut size={14} />
                         </div>
                         <span className="font-medium">Sign Out</span>
@@ -282,7 +260,7 @@ export default function Navbar({
           {/* Mobile hamburger */}
           <button
             onClick={() => setOpen(!open)}
-            className="md:hidden text-[#2d4070] p-2 rounded-lg hover:bg-blue-50"
+            className="lg:hidden text-[#2d4070] p-2 rounded-lg hover:bg-primary/10"
           >
             {open ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -291,16 +269,18 @@ export default function Navbar({
 
       {/* Mobile menu */}
       {open && (
-        <div className="md:hidden bg-white border-t border-[#e2eaf8] px-4 py-4 space-y-1">
+        <div className="lg:hidden bg-white border-t border-[#e2eaf8] px-3 py-3 space-y-0.5">
           {[
+            // ["Recommended Jobs", "/recommended-jobs"],
             ["Find Jobs", "/jobs"],
-            ["Companies", "/companies"],
-            ["For Employers", "#"],
+            ["Match My Resume", "/match-resume"],
+            ["About Us", "/about"],
+            ["Contact Us", "/contact"],
           ].map(([label, href]) => (
             <Link
               key={label}
               href={href}
-              className="block py-2.5 px-3 text-sm text-[#2d4070] hover:text-blue-600 hover:bg-blue-50 rounded-xl font-medium"
+              className="block py-1.5 px-3 text-xs text-[#2d4070] rounded-lg font-medium"
               onClick={() => setOpen(false)}
             >
               {label}

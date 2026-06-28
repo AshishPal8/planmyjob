@@ -8,7 +8,7 @@ export default async function RootLayout({
   return (
     <div className="min-h-screen bg-[#f0f5ff] flex">
       <DashboardSidebar />
-      <main className="flex-1 p-6 lg:p-8">{children}</main>
+      <main className="flex-1 min-w-0">{children}</main>
     </div>
   );
 }
