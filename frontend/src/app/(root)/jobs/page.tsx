@@ -8,6 +8,7 @@ import type { BackendJob } from "@/lib/jobs";
 import ResumeUploadModal from "@/modals/ResumeUploadModal";
 import { categories } from "@/data";
 import { Button } from "@/components/ui/button";
+import AutocompleteInput from "@/components/ui/AutocompleteInput";
 import api from "@/lib/axios";
 
 const JOB_TYPES = [
@@ -236,37 +237,26 @@ function JobsContent() {
           </div>
 
           <div className="bg-[#f8fbff] border border-[#e2eaf8] rounded-2xl p-2 flex flex-col sm:flex-row gap-2">
-            <div className="flex items-center gap-2.5 flex-1 px-3 py-1.5">
-              <Search size={15} className="text-blue-500 shrink-0" />
-              <input
-                value={skillsInput}
-                onChange={(e) => setSkillsInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                placeholder="Skills (e.g. react, python, aws)"
-                className="bg-transparent w-full text-[#0c1a3a] placeholder-[#a8bcd8] outline-none text-sm"
-              />
-              {skillsInput && (
-                <button onClick={() => setSkillsInput("")}>
-                  <X size={13} className="text-[#a8bcd8]" />
-                </button>
-              )}
-            </div>
+            <AutocompleteInput
+              value={skillsInput}
+              onChange={setSkillsInput}
+              endpoint="/search/skills"
+              buildLabel={(item) => item.name}
+              placeholder="Skills (e.g. react, python, aws)"
+              icon={<Search size={15} className="text-primary" />}
+              minChars={1}
+            />
             <div className="hidden sm:block w-px bg-[#e2eaf8] self-stretch my-1" />
-            <div className="flex items-center gap-2.5 flex-1 px-3 py-1.5">
-              <MapPin size={15} className="text-blue-500 shrink-0" />
-              <input
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                placeholder="City or remote..."
-                className="bg-transparent w-full text-[#0c1a3a] placeholder-[#a8bcd8] outline-none text-sm"
-              />
-              {location && (
-                <button onClick={() => setLocation("")}>
-                  <X size={13} className="text-[#a8bcd8]" />
-                </button>
-              )}
-            </div>
+            <AutocompleteInput
+              value={location}
+              onChange={setLocation}
+              endpoint="/search/cities"
+              buildLabel={(item) => item.name}
+              buildSublabel={(item) => item.state}
+              placeholder="City or remote..."
+              icon={<MapPin size={15} className="text-primary" />}
+              minChars={2}
+            />
             <Button onClick={handleSearch}>Search</Button>
           </div>
 
