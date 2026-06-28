@@ -2,7 +2,38 @@ import { resumes, type Resume } from "../../db/schema";
 import { extractResumeData } from "../extract/extract.service";
 import { imagekitInstance } from "../../config/imagekit.config";
 import { db } from "../../db";
-import { eq, sql } from "drizzle-orm";
+import sharp from "sharp";
+
+const IMAGE_MIMETYPES = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
+
+export const uploadFileService = async (file: Express.Multer.File) => {
+  const isImage = IMAGE_MIMETYPES.includes(file.mimetype);
+
+  let buffer = file.buffer;
+  let fileName: string;
+  let folder: string;
+
+  if (isImage) {
+    buffer = await sharp(file.buffer)
+      .resize({ width: 1200, withoutEnlargement: true })
+      .webp({ quality: 80 })
+      .toBuffer();
+    fileName = `img_${Date.now()}.webp`;
+    folder = "/planmyjob/images";
+  } else {
+    fileName = `file_${Date.now()}_${file.originalname}`;
+    folder = "/planmyjob/resumes";
+  }
+
+  const result = await imagekitInstance.upload({
+    file: buffer,
+    fileName,
+    folder,
+    useUniqueFileName: true,
+  });
+
+  return { url: result.url, fileId: result.fileId };
+};
 
 export const uploadAndProcessResume = async (
   file: Express.Multer.File,
@@ -11,7 +42,7 @@ export const uploadAndProcessResume = async (
     imagekitInstance.upload({
       file: file.buffer,
       fileName: `resume_${Date.now()}.pdf`,
-      folder: "/resumes",
+      folder: "/planmyjob/resumes",
       useUniqueFileName: true,
     }),
     extractResumeData(file.buffer),

@@ -13,11 +13,13 @@
   "devDependencies": {
     "@types/bun": "latest",
     "@types/express": "^5.0.6",
+    "@types/hpp": "^0.2.7",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.1.0",
     "@types/node": "^25.6.0",
     "@types/node-cron": "^3.0.11",
     "@types/pg": "^8.20.0",
+    "@types/sharp": "^0.32.0",
     "drizzle-kit": "^0.31.10",
     "tsx": "^4.21.0"
   },
@@ -33,6 +35,10 @@
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2",
+    "express-slow-down": "^3.1.0",
+    "helmet": "^8.2.0",
+    "hpp": "^0.2.3",
     "imagekit": "^6.0.0",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.1.1",
@@ -40,6 +46,7 @@
     "nodemon": "^3.1.14",
     "pg": "^8.20.0",
     "postgres": "^3.4.9",
+    "sharp": "^0.35.2",
     "zod": "^4.3.6"
   }
 }

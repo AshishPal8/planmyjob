@@ -23,31 +23,28 @@ export const globalErrorHandler = (
   res: Response,
   _next: NextFunction,
 ) => {
-  console.log(
-    "🔴 [ERROR HANDLER] Called — headersSent:",
-    res.headersSent,
-    "url:",
-    req.url,
-  );
+  if (res.headersSent) return;
 
-  if (res.headersSent) {
-    console.log("🔴 [ERROR HANDLER] SKIPPED — headers already sent");
-    return;
-  }
-  const statusCode = err instanceof AppError ? err.statusCode : 500;
-  const message = err.message || "Something went wrong";
+  const isProd = process.env.NODE_ENV === "production";
+  const isAppError = err instanceof AppError;
+  const statusCode = isAppError ? err.statusCode : 500;
+
+  // hide raw DB / internal errors from clients in production
+  const message = isAppError
+    ? err.message
+    : isProd
+      ? "Something went wrong"
+      : err.message;
 
   console.error({
     name: err.name,
     message: err.message,
     statusCode,
-    stack: err.stack,
+    url: req.url,
+    ...(isProd ? {} : { stack: err.stack }),
   });
 
-  res.status(statusCode).json({
-    statusCode,
-    message,
-  });
+  res.status(statusCode).json({ success: false, statusCode, message });
 };
 
 // -------------------- Helper Specific Errors --------------------
