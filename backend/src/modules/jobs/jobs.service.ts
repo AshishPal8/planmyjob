@@ -1,6 +1,7 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "../../db";
 import { jobs } from "../../db/schema/job.schema";
+import { savedJobs, jobApplications } from "../../db/schema";
 import type { NormalizedJob } from "../scraper/scraper.schema";
 import { generateSlug } from "../../utils/generateSlug";
 import type { GetJobsInput } from "./jobs.schema";
@@ -122,7 +123,10 @@ export const matchJobsToSkills = async (skills: string[], limit = 20) => {
   return scored.sort((a, b) => b.matchScore - a.matchScore).slice(0, limit);
 };
 
-export const getJobsService = async (filters: GetJobsInput) => {
+export const getJobsService = async (
+  filters: GetJobsInput,
+  userId?: number,
+) => {
   const { title, skills, locations, jobType, page, pageSize } = filters;
   const offset = (page - 1) * pageSize;
 
@@ -189,6 +193,7 @@ export const getJobsService = async (filters: GetJobsInput) => {
       applyUrl: jobs.applyUrl,
       sourceUrl: jobs.sourceUrl,
       postedAt: jobs.postedAt,
+      applyCount: jobs.applyCount,
       description: jobs.description,
     })
     .from(jobs)
@@ -247,12 +252,46 @@ export const getJobsService = async (filters: GetJobsInput) => {
       );
     });
 
-  return {
-    total: ranked.length,
-    page,
-    pageSize,
-    jobs: ranked.slice(offset, offset + pageSize),
-  };
+  const pageJobs = ranked.slice(offset, offset + pageSize);
+
+  if (pageJobs.length === 0) {
+    return { total: ranked.length, page, pageSize, jobs: [] };
+  }
+
+  // fetch user-specific flags if authenticated (applyCount already in job row)
+  let savedSet = new Set<number>();
+  let appliedSet = new Set<number>();
+
+  if (userId) {
+    const jobIds = pageJobs.map((j) => j.id);
+    const [savedRows, appliedRows] = await Promise.all([
+      db
+        .select({ jobId: savedJobs.jobId })
+        .from(savedJobs)
+        .where(
+          and(eq(savedJobs.userId, userId), inArray(savedJobs.jobId, jobIds)),
+        ),
+      db
+        .select({ jobId: jobApplications.jobId })
+        .from(jobApplications)
+        .where(
+          and(
+            eq(jobApplications.userId, userId),
+            inArray(jobApplications.jobId, jobIds),
+          ),
+        ),
+    ]);
+    savedSet = new Set(savedRows.map((r) => r.jobId));
+    appliedSet = new Set(appliedRows.map((r) => r.jobId));
+  }
+
+  const enrichedJobs = pageJobs.map((job) => ({
+    ...job,
+    isSaved: savedSet.has(job.id) ? 1 : 0,
+    isApplied: appliedSet.has(job.id) ? 1 : 0,
+  }));
+
+  return { total: ranked.length, page, pageSize, jobs: enrichedJobs };
 };
 
 export const getJobBySlugService = async (slug: string) => {
@@ -269,4 +308,99 @@ export const getJobBySlugService = async (slug: string) => {
     .limit(1);
 
   return rows[0] ?? null;
+};
+
+export const toggleSaveJobService = async (userId: number, jobId: number) => {
+  const existing = await db
+    .select({ id: savedJobs.id })
+    .from(savedJobs)
+    .where(and(eq(savedJobs.userId, userId), eq(savedJobs.jobId, jobId)))
+    .limit(1);
+
+  if (existing[0]) {
+    await db
+      .delete(savedJobs)
+      .where(and(eq(savedJobs.userId, userId), eq(savedJobs.jobId, jobId)));
+    return { saved: false };
+  }
+
+  await db.insert(savedJobs).values({ userId, jobId });
+  return { saved: true };
+};
+
+export const getSavedJobsService = async (userId: number) => {
+  const rows = await db
+    .select({
+      id: jobs.id,
+      title: jobs.title,
+      slug: jobs.slug,
+      company: jobs.company,
+      location: jobs.location,
+      skills: jobs.skills,
+      salary: jobs.salary,
+      jobType: jobs.jobType,
+      applyUrl: jobs.applyUrl,
+      sourceUrl: jobs.sourceUrl,
+      postedAt: jobs.postedAt,
+      applyCount: jobs.applyCount,
+      savedAt: savedJobs.createdAt,
+    })
+    .from(savedJobs)
+    .innerJoin(jobs, eq(savedJobs.jobId, jobs.id))
+    .where(
+      and(
+        eq(savedJobs.userId, userId),
+        eq(jobs.isActive, true),
+        eq(jobs.isDeleted, false),
+      ),
+    )
+    .orderBy(savedJobs.createdAt);
+
+  if (rows.length === 0) return [];
+
+  const jobIds = rows.map((r) => r.id);
+
+  const appliedRows = await db
+    .select({ jobId: jobApplications.jobId })
+    .from(jobApplications)
+    .where(
+      and(
+        eq(jobApplications.userId, userId),
+        inArray(jobApplications.jobId, jobIds),
+      ),
+    );
+
+  const appliedSet = new Set(appliedRows.map((r) => r.jobId));
+
+  return rows.map((job) => ({
+    ...job,
+    isSaved: 1,
+    isApplied: appliedSet.has(job.id) ? 1 : 0,
+  }));
+};
+
+export const trackApplyJobService = async (userId: number, jobId: number) => {
+  const inserted = await db
+    .insert(jobApplications)
+    .values({ userId, jobId })
+    .onConflictDoNothing()
+    .returning({ id: jobApplications.id });
+
+  if (inserted.length > 0) {
+    const [updated] = await db
+      .update(jobs)
+      .set({ applyCount: sql`${jobs.applyCount} + 1` })
+      .where(eq(jobs.id, jobId))
+      .returning({ applyCount: jobs.applyCount });
+
+    return { applyCount: updated?.applyCount ?? 0 };
+  }
+
+  const [job] = await db
+    .select({ applyCount: jobs.applyCount })
+    .from(jobs)
+    .where(eq(jobs.id, jobId))
+    .limit(1);
+
+  return { applyCount: job?.applyCount ?? 0 };
 };
