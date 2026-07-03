@@ -1,14 +1,14 @@
 "use client";
 import { useState, useEffect, useMemo, Suspense, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { Search, MapPin, X, SlidersHorizontal, Sparkles } from "lucide-react";
+import { X, SlidersHorizontal, Sparkles } from "lucide-react";
 import BackendJobCard from "@/components/jobs/BackendJobCard";
 import JobCardSkeleton from "@/components/jobs/JobCardSkeleton";
 import type { BackendJob } from "@/lib/jobs";
 import ResumeUploadModal from "@/modals/ResumeUploadModal";
 import { categories } from "@/data";
 import { Button } from "@/components/ui/button";
-import AutocompleteInput from "@/components/ui/AutocompleteInput";
+import JobSearchBar from "@/components/ui/JobSearchBar";
 import api from "@/lib/axios";
 
 const JOB_TYPES = [
@@ -68,6 +68,8 @@ function JobsContent() {
   const [matchedTitle, setMatchedTitle] = useState("");
   const [skillsInput, setSkillsInput] = useState("");
   const [location, setLocation] = useState("");
+  const [appliedSkills, setAppliedSkills] = useState("");
+  const [appliedLocation, setAppliedLocation] = useState("");
   const [selTypes, setSelTypes] = useState<string[]>([]);
   const [selCat, setSelCat] = useState("");
   const [sortBy, setSortBy] = useState("relevance");
@@ -145,11 +147,15 @@ function JobsContent() {
     const loc = searchParams.get("location") || "";
     const isMatched = searchParams.get("matched") === "true";
     const title = searchParams.get("title") || "";
+    const category = searchParams.get("category") || "";
 
     setSkillsInput(skills);
     setLocation(loc);
+    setAppliedSkills(skills);
+    setAppliedLocation(loc);
     setMatched(isMatched);
     setMatchedTitle(title);
+    if (category && CATEGORY_KEYWORDS[category]) setSelCat(category);
 
     callApi(skills, loc, title);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -181,7 +187,11 @@ function JobsContent() {
     return result;
   }, [allJobs, selCat, selTypes, sortBy]);
 
-  const handleSearch = () => callApi(skillsInput, location);
+  const handleSearch = () => {
+    setAppliedSkills(skillsInput);
+    setAppliedLocation(location);
+    callApi(skillsInput, location);
+  };
 
   const toggleType = (t: string) =>
     setSelTypes((p) => (p.includes(t) ? p.filter((x) => x !== t) : [...p, t]));
@@ -191,6 +201,8 @@ function JobsContent() {
     setSelCat("");
     setSkillsInput("");
     setLocation("");
+    setAppliedSkills("");
+    setAppliedLocation("");
     callApi("", "");
   };
 
@@ -204,6 +216,7 @@ function JobsContent() {
             setShowResume(false);
             const skillsStr = _skills.join(",");
             setSkillsInput(skillsStr);
+            setAppliedSkills(skillsStr);
             setMatched(true);
             setMatchedTitle(title || "");
             callApi(skillsStr, location, title);
@@ -236,33 +249,18 @@ function JobsContent() {
             </Button>
           </div>
 
-          <div className="bg-[#f8fbff] border border-[#e2eaf8] rounded-2xl p-2 flex flex-col sm:flex-row gap-2">
-            <AutocompleteInput
-              value={skillsInput}
-              onChange={setSkillsInput}
-              endpoint="/search/skills"
-              buildLabel={(item) => item.name}
-              placeholder="Skills (e.g. react, python, aws)"
-              icon={<Search size={15} className="text-primary" />}
-              minChars={1}
-            />
-            <div className="hidden sm:block w-px bg-[#e2eaf8] self-stretch my-1" />
-            <AutocompleteInput
-              value={location}
-              onChange={setLocation}
-              endpoint="/search/cities"
-              buildLabel={(item) => item.name}
-              buildSublabel={(item) => item.state}
-              placeholder="City or remote..."
-              icon={<MapPin size={15} className="text-primary" />}
-              minChars={2}
-            />
-            <Button onClick={handleSearch}>Search</Button>
-          </div>
+          <JobSearchBar
+            skillsValue={skillsInput}
+            onSkillsChange={setSkillsInput}
+            locationValue={location}
+            onLocationChange={setLocation}
+            onSearch={handleSearch}
+            variant="jobs"
+          />
 
-          {(skillsInput || location) && (
+          {(appliedSkills || appliedLocation) && (
             <div className="flex flex-wrap gap-2 mt-3">
-              {skillsInput
+              {appliedSkills
                 .split(",")
                 .map((s) => s.trim())
                 .filter(Boolean)
@@ -271,8 +269,8 @@ function JobsContent() {
                     {skill}
                   </span>
                 ))}
-              {location && (
-                <span className="badge badge-sky text-xs">{location}</span>
+              {appliedLocation && (
+                <span className="badge badge-sky text-xs">{appliedLocation}</span>
               )}
             </div>
           )}

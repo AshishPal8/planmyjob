@@ -18,11 +18,13 @@ import {
   getApplyUrl,
   getLogoColor,
 } from "@/lib/jobs";
+import { useAuthAction } from "@/hooks/use-auth-action";
 
 export type { BackendJob };
 
 export default function BackendJobCard({ job }: { job: BackendJob }) {
   const [saved, setSaved] = useState(false);
+  const { execute } = useAuthAction();
   const logoColor = getLogoColor(job.company);
   const applyUrl = getApplyUrl(job);
   const skills = job.skills ?? [];
@@ -117,7 +119,9 @@ export default function BackendJobCard({ job }: { job: BackendJob }) {
               </Link>
               <Button
                 onClick={() =>
-                  window.open(applyUrl, "_blank", "noopener,noreferrer")
+                  execute(() =>
+                    window.open(applyUrl, "_blank", "noopener,noreferrer"),
+                  )
                 }
                 className="text-xs px-4 py-1.5 rounded-lg gap-1.5 h-auto bg-primary hover:bg-primary/90 text-white"
               >

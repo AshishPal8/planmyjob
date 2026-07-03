@@ -48,12 +48,7 @@ export const googleCallback = async (
     });
 
     setAuthCookie(res, genereteToken);
-    // res.status(200).json({
-    //   success: true,
-    //   token: genereteToken,
-    //   user: sanitizeUser(user),
-    // });
-    res.redirect(envConfig.frontendUrl);
+    res.redirect(`${envConfig.frontendUrl}/profile`);
   } catch (error) {
     next(error);
   }

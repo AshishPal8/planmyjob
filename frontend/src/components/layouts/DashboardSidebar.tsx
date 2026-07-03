@@ -43,7 +43,7 @@ export default function DashboardSidebar() {
     }
   };
 
-  const completion = 78;
+  const completion = user.profileScore ?? 0;
 
   return (
     <aside className="hidden lg:flex w-64 bg-white border-r border-[#e2eaf8] flex-col fixed inset-y-0 left-0 z-40">
@@ -107,7 +107,7 @@ export default function DashboardSidebar() {
           </Link>
         ))}
       </nav>
-
+ 
       {/* Sign out */}
       <div className="px-3 py-4 border-t border-[#e2eaf8]">
         <button

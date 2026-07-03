@@ -5,13 +5,12 @@ import {
   MapPin,
   Clock,
   ArrowLeft,
-  ExternalLink,
   Calendar,
   Briefcase,
   IndianRupee,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import ApplyButton from "@/components/jobs/ApplyButton";
 import {
   type FullJob,
   JOB_TYPE_LABELS,
@@ -217,16 +216,11 @@ export default async function JobDetailPage({ params }: Props) {
               </div>
 
               {/* Right: Apply button */}
-              <a
-                href={applyUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="shrink-0"
-              >
-                <Button className="bg-primary hover:bg-primary/90 text-white gap-1.5 px-4 sm:px-6 text-sm">
-                  Apply Now <ExternalLink size={13} />
-                </Button>
-              </a>
+              <ApplyButton
+                applyUrl={applyUrl}
+                label="Apply Now"
+                className="shrink-0 bg-primary hover:bg-primary/90 text-white gap-1.5 px-4 sm:px-6 text-sm"
+              />
             </div>
           </div>
         </div>
@@ -308,14 +302,12 @@ export default async function JobDetailPage({ params }: Props) {
             <p className="text-[#7a92c1] text-sm font-medium">
               Interested in this opportunity?
             </p>
-            <a href={applyUrl} target="_blank" rel="noopener noreferrer">
-              <Button
-                size="lg"
-                className="bg-primary hover:bg-primary/90 text-white gap-2 px-10 rounded-xl text-base"
-              >
-                Apply for this Position <ExternalLink size={16} />
-              </Button>
-            </a>
+            <ApplyButton
+              applyUrl={applyUrl}
+              label="Apply for this Position"
+              size="lg"
+              className="bg-primary hover:bg-primary/90 text-white gap-2 px-10 rounded-xl text-base"
+            />
             <p className="text-[#a8bcd8] text-xs">
               You&apos;ll be redirected to the original job posting
             </p>
