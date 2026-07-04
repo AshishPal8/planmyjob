@@ -218,7 +218,9 @@ export default async function JobDetailPage({ params }: Props) {
               {/* Right: Apply button */}
               <ApplyButton
                 applyUrl={applyUrl}
+                jobId={job.id}
                 label="Apply Now"
+                isApplied={!!job.isApplied}
                 className="shrink-0 bg-primary hover:bg-primary/90 text-white gap-1.5 px-4 sm:px-6 text-sm"
               />
             </div>
@@ -304,7 +306,10 @@ export default async function JobDetailPage({ params }: Props) {
             </p>
             <ApplyButton
               applyUrl={applyUrl}
+              jobId={job.id}
               label="Apply for this Position"
+              appliedLabel="You've Applied"
+              isApplied={!!job.isApplied}
               size="lg"
               className="bg-primary hover:bg-primary/90 text-white gap-2 px-10 rounded-xl text-base"
             />

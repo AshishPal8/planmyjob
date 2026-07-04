@@ -7,6 +7,7 @@ import {
   Bookmark,
   BookmarkCheck,
   ExternalLink,
+  CheckCircle2,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,15 +20,29 @@ import {
   getLogoColor,
 } from "@/lib/jobs";
 import { useAuthAction } from "@/hooks/use-auth-action";
+import api from "@/lib/axios";
 
 export type { BackendJob };
 
 export default function BackendJobCard({ job }: { job: BackendJob }) {
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(!!job.isSaved);
   const { execute } = useAuthAction();
   const logoColor = getLogoColor(job.company);
   const applyUrl = getApplyUrl(job);
   const skills = job.skills ?? [];
+
+  const handleJobApply: any = async () => {
+    execute(() => window.open(applyUrl, "_blank", "noopener,noreferrer"));
+
+    await api.post(`/jobs/apply/${job.id}`);
+  }
+
+  const handleSaveToggle = () => {
+    execute(async () => {
+      setSaved((prev) => !prev);
+      await api.post(`/jobs/save/${job.id}`);
+    });
+  };
 
   return (
     <Card className="p-6 border-[#e2eaf8] shadow-sm hover:shadow-md hover:border-blue-200 transition-all group flex flex-col h-full bg-white">
@@ -66,7 +81,7 @@ export default function BackendJobCard({ job }: { job: BackendJob }) {
             </div>
           </div>
           <Button
-            onClick={() => setSaved(!saved)}
+            onClick={handleSaveToggle}
             className={`shrink-0 p-1.5 rounded-lg transition-all ${
               saved
                 ? "text-primary bg-primary/20"
@@ -117,16 +132,21 @@ export default function BackendJobCard({ job }: { job: BackendJob }) {
               >
                 Details
               </Link>
-              <Button
-                onClick={() =>
-                  execute(() =>
-                    window.open(applyUrl, "_blank", "noopener,noreferrer"),
-                  )
-                }
-                className="text-xs px-4 py-1.5 rounded-lg gap-1.5 h-auto bg-primary hover:bg-primary/90 text-white"
-              >
-                Apply <ExternalLink size={11} />
-              </Button>
+              {job.isApplied ? (
+                <Button
+                  disabled
+                  className="text-xs px-4 py-1.5 rounded-lg gap-1.5 h-auto bg-green-50 text-green-700 border border-green-200 cursor-default hover:bg-green-50 disabled:opacity-100"
+                >
+                  <CheckCircle2 size={13} /> Applied
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleJobApply}
+                  className="text-xs px-4 py-1.5 rounded-lg gap-1.5 h-auto bg-primary hover:bg-primary/90 text-white"
+                >
+                  Apply <ExternalLink size={11} />
+                </Button>
+              )}
             </div>
           </div>
         </div>

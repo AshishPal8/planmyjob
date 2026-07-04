@@ -12,6 +12,8 @@ export interface BackendJob {
   postedAt: string | null;
   matchScore: number;
   matchedSkills: string[];
+  isSaved: number;
+  isApplied: number;
 }
 
 export interface FullJob {
@@ -30,6 +32,8 @@ export interface FullJob {
   sourceUrl: string | null;
   postedAt: string | null;
   createdAt: string;
+  isSaved: number;
+  isApplied: number;
 }
 
 export const JOB_TYPE_LABELS: Record<string, string> = {

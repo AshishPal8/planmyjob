@@ -177,8 +177,8 @@ export default function Home() {
               className="text-5xl lg:text-[68px] font-extrabold text-[#0c1a3a] leading-[1.1] mb-6"
               style={{ fontFamily: "Sora, sans-serif" }}
             >
-              Find Your <span className="text-gradient">Dream Job</span>
-              <br /> in{" "}
+              Find Your Dream Job
+              in{" "}
               <span
                 key={countryIdx}
                 className="text-gradient inline-block"

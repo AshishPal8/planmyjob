@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   applyJob,
   getJobBySlug,
+  getJobSlugsForSitemap,
   getJobs,
   getSavedJobs,
   saveJob,
@@ -21,6 +22,9 @@ router.post("/match", optionalAuth, validateRequest(getJobsSchema), getJobs);
 // saved jobs — must come before /:slug
 router.get("/saved", requireAuth, getSavedJobs);
 
+// sitemap feed — must come before /:slug
+router.get("/sitemap/all", getJobSlugsForSitemap);
+
 // save / unsave toggle
 router.post("/save/:jobId", requireAuth, saveJob);
 
@@ -32,6 +36,6 @@ router.post("/scrape/remotive", triggerRemotive);
 router.post("/scrape/jsearch", triggerJSearch);
 
 // job detail
-router.get("/:slug", getJobBySlug);
+router.get("/:slug", optionalAuth, getJobBySlug);
 
 export default router;

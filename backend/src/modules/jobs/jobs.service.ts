@@ -294,7 +294,16 @@ export const getJobsService = async (
   return { total: ranked.length, page, pageSize, jobs: enrichedJobs };
 };
 
-export const getJobBySlugService = async (slug: string) => {
+export const getJobSlugsForSitemapService = async () => {
+  return db
+    .select({ slug: jobs.slug, updatedAt: jobs.updatedAt })
+    .from(jobs)
+    .where(and(eq(jobs.isActive, true), eq(jobs.isDeleted, false)))
+    .orderBy(sql`${jobs.updatedAt} desc`)
+    .limit(50000);
+};
+
+export const getJobBySlugService = async (slug: string, userId?: number) => {
   const rows = await db
     .select()
     .from(jobs)
@@ -307,7 +316,34 @@ export const getJobBySlugService = async (slug: string) => {
     )
     .limit(1);
 
-  return rows[0] ?? null;
+  const job = rows[0];
+  if (!job) return null;
+
+  if (!userId) return { ...job, isSaved: 0, isApplied: 0 };
+
+  const [savedRows, appliedRows] = await Promise.all([
+    db
+      .select({ id: savedJobs.id })
+      .from(savedJobs)
+      .where(and(eq(savedJobs.userId, userId), eq(savedJobs.jobId, job.id)))
+      .limit(1),
+    db
+      .select({ id: jobApplications.id })
+      .from(jobApplications)
+      .where(
+        and(
+          eq(jobApplications.userId, userId),
+          eq(jobApplications.jobId, job.id),
+        ),
+      )
+      .limit(1),
+  ]);
+
+  return {
+    ...job,
+    isSaved: savedRows.length > 0 ? 1 : 0,
+    isApplied: appliedRows.length > 0 ? 1 : 0,
+  };
 };
 
 export const toggleSaveJobService = async (userId: number, jobId: number) => {
