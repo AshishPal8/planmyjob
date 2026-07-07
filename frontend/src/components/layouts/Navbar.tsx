@@ -37,9 +37,7 @@ export default function Navbar({
   const [scrolled, setScrolled] = useState(false);
   const router = useRouter();
   const loginModal = useLoginModal();
-  const { user, setAuth } = useAuthStore();
-
-  console.log({user})
+  const { user, setUser } = useAuthStore();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -54,14 +52,12 @@ export default function Navbar({
       .get("/auth/me")
       .then((res) => {
         const userData = res.data.user || res.data;
-        if (userData) {
-          setAuth(userData?.token, userData);
+        if (userData?.id) {
+          setUser(userData);
         }
       })
-      .catch((err) => {
-        console.error("Auth check failed", err);
-      });
-  }, []);
+      .catch(() => {});
+  }, [setUser]);
 
   const { logout: clearAuth } = useAuthStore();
 

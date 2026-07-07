@@ -95,7 +95,10 @@ export const getFullProfile = async (userId: number) => {
     profileScoreBreakdown: breakdown,
     // collections
     workExperiences: experienceRows,
-    educations: educationRows,
+    educations: educationRows.map((edu) => ({
+      ...edu,
+      percentage: edu.percentage != null ? Number(edu.percentage) : null,
+    })),
   };
 };
 

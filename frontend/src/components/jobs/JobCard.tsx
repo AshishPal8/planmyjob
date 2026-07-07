@@ -13,6 +13,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useAuthAction } from "@/hooks/use-auth-action";
 
 interface Job {
   id: string;
@@ -42,9 +43,12 @@ export default function JobCard({
   matchScore?: number;
 }) {
   const [isSaved, setIsSaved] = useState(saved);
+  const { execute } = useAuthAction();
 
   const handleApply = () => {
-    window.open(job.linkedinUrl, "_blank", "noopener,noreferrer");
+    execute(() => {
+      window.open(job.linkedinUrl, "_blank", "noopener,noreferrer");
+    });
   };
 
   return (

@@ -38,6 +38,8 @@ export interface User {
   githubUrl?: string;
   portfolioUrl?: string;
   openToWork?: boolean;
+  profileScore?: number;
+  profileScoreBreakdown?: Record<string, boolean>;
   workExperiences?: WorkExperience[];
   educations?: Education[];
 }
@@ -59,7 +61,7 @@ export const useAuthStore = create<AuthState>()(
       setAuth: (token, user) => set({ token, user }),
       setUser: (user) => set({ user }),
       logout: () => set({ token: null, user: null }),
-      isAuthenticated: () => !!get().token,
+      isAuthenticated: () => !!get().user,
     }),
     { name: "auth-storage" },
   ),

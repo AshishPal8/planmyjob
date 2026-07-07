@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 const workExperienceSchema = z.object({
-  title: z.string().min(1).max(150),
-  company: z.string().min(1).max(150),
-  location: z.string().max(255).optional(),
+  title: z.string(),
+  company: z.string(),
+  location: z.string().optional(),
   fromDate: z.coerce.date(),
   toDate: z.coerce.date().optional(),
   isCurrent: z.boolean().default(false),
@@ -11,38 +11,34 @@ const workExperienceSchema = z.object({
 });
 
 const educationSchema = z.object({
-  degreeTitle: z.string().min(1).max(150),
-  university: z.string().min(1).max(255),
-  location: z.string().max(255).optional(),
+  degreeTitle: z.string(),
+  university: z.string(),
+  location: z.string().optional(),
   fromDate: z.coerce.date(),
   toDate: z.coerce.date().optional(),
   isCurrent: z.boolean().default(false),
-  percentage: z.number().min(0).max(100).optional(),
+  percentage: z.number().optional(),
 });
 
-export const updateProfileSchema = z
-  .object({
-    // users table
-    name: z.string().min(1).max(100).optional(),
-    phone: z.string().max(20).optional(),
-    location: z.string().max(255).optional(),
+export const updateProfileSchema = z.object({
+  // users table
+  name: z.string().optional(),
+  phone: z.string().optional(),
+  location: z.string().optional(),
 
-    // user_profiles table
-    headline: z.string().max(150).optional(),
-    about: z.string().optional(),
-    skills: z.array(z.string().min(1)).optional(),
-    resumeUrl: z.url().optional(),
-    linkedinUrl: z.url().optional(),
-    githubUrl: z.url().optional(),
-    portfolioUrl: z.url().optional(),
-    openToWork: z.boolean().optional(),
+  // user_profiles table
+  headline: z.string().optional(),
+  about: z.string().optional(),
+  skills: z.array(z.string()).optional(),
+  resumeUrl: z.string().optional(),
+  linkedinUrl: z.string().optional(),
+  githubUrl: z.string().optional(),
+  portfolioUrl: z.string().optional(),
+  openToWork: z.boolean().optional(),
 
-    // collections — full replace when provided
-    workExperiences: z.array(workExperienceSchema).optional(),
-    educations: z.array(educationSchema).optional(),
-  })
-  .refine((data) => Object.keys(data).length > 0, {
-    message: "At least one field must be provided",
-  });
+  // collections — full replace when provided
+  workExperiences: z.array(workExperienceSchema).optional(),
+  educations: z.array(educationSchema).optional(),
+});
 
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;

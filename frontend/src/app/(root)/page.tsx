@@ -2,27 +2,65 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
-  Search,
-  MapPin,
   ArrowRight,
   Sparkles,
   ChevronRight,
+  Upload,
+  ScanSearch,
+  Send,
+  Star,
+  Quote,
+  Building2,
 } from "lucide-react";
-import JobCard from "@/components/jobs/JobCard";
+import BackendJobCard from "@/components/jobs/BackendJobCard";
+import JobCardSkeleton from "@/components/jobs/JobCardSkeleton";
 import ResumeUploadModal from "@/modals/ResumeUploadModal";
-import { jobs as allJobs, stats } from "@/data";
-import { Button } from "@/components/ui/button";
-import AutocompleteInput from "@/components/ui/AutocompleteInput";
+import { stats, categories, companies, testimonials } from "@/data";
+import JobSearchBar from "@/components/ui/JobSearchBar";
 import { useRouter } from "next/navigation";
+import api from "@/lib/axios";
+import type { BackendJob } from "@/lib/jobs";
+
+const COUNTRIES = ["India", "USA", "Canada", "UK", "Australia", "Germany", "Singapore"];
+
+const HOW_IT_WORKS = [
+  {
+    icon: Upload,
+    title: "Upload your resume",
+    desc: "Drop your PDF, DOCX or TXT resume. It takes less than 10 seconds.",
+  },
+  {
+    icon: ScanSearch,
+    title: "AI extracts your skills",
+    desc: "We parse your experience, role and skills automatically — no forms to fill.",
+  },
+  {
+    icon: Sparkles,
+    title: "Get matched instantly",
+    desc: "We search jobs from our own listings plus aggregated feeds like LinkedIn, Indeed & Naukri to find your best fits.",
+  },
+  {
+    icon: Send,
+    title: "Apply with one click",
+    desc: "Apply directly on the source site — no repeated data entry, no spam.",
+  },
+];
 
 export default function Home() {
   const [showResume, setShowResume] = useState(false);
-  const [featuredJobs] = useState(
-    allJobs.filter((j) => j.featured).slice(0, 6),
-  );
+  const [featuredJobs, setFeaturedJobs] = useState<BackendJob[]>([]);
+  const [jobsLoading, setJobsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [location, setLocation] = useState("");
-  const router = useRouter()
+  const [countryIdx, setCountryIdx] = useState(0);
+  const router = useRouter();
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setCountryIdx((i) => (i + 1) % COUNTRIES.length);
+    }, 2000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     // Show resume modal for new visitors after 1.5s
@@ -34,8 +72,21 @@ export default function Home() {
     }
   }, []);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    api
+      .post("/jobs/match", {
+        title: "",
+        skills: [],
+        locations: [],
+        page: 1,
+        pageSize: 6,
+      })
+      .then((res) => setFeaturedJobs(res.data?.data?.jobs ?? []))
+      .catch(() => setFeaturedJobs([]))
+      .finally(() => setJobsLoading(false));
+  }, []);
+
+  const handleSearch = () => {
     const params = new URLSearchParams();
     if (search) params.set("skills", search);
     if (location) params.set("location", location);
@@ -116,12 +167,25 @@ export default function Home() {
               1,20,000+ Jobs Updated Daily · 100% Free
             </div>
 
+            <style>{`
+              @keyframes countrySlideUp {
+                from { transform: translateY(40px); opacity: 0; }
+                to   { transform: translateY(0);    opacity: 1; }
+              }
+            `}</style>
             <h1
               className="text-5xl lg:text-[68px] font-extrabold text-[#0c1a3a] leading-[1.1] mb-6"
               style={{ fontFamily: "Sora, sans-serif" }}
             >
-              Find Your <span className="text-gradient">Dream Job</span>
-              <br /> in India
+              Find Your Dream Job
+              in{" "}
+              <span
+                key={countryIdx}
+                className="text-gradient inline-block"
+                style={{ animation: "countrySlideUp 0.5s cubic-bezier(0.22,1,0.36,1) forwards" }}
+              >
+                {COUNTRIES[countryIdx]}
+              </span>
             </h1>
 
             <p className="text-[#2d4070] text-xl mb-10 leading-relaxed max-w-xl">
@@ -130,33 +194,14 @@ export default function Home() {
             </p>
 
             {/* Search bar */}
-            <form onSubmit={handleSearch}>
-              <div className="bg-white border border-[#e2eaf8] rounded-2xl p-2 flex flex-col sm:flex-row gap-2 mb-4 shadow-card-lg">
-                <AutocompleteInput
-                  value={search}
-                  onChange={setSearch}
-                  endpoint="/search/skills"
-                  buildLabel={(item) => item.name}
-                  placeholder="Skills (e.g. react, next.js, python)"
-                  icon={<Search size={16} className="text-primary" />}
-                  minChars={1}
-                />
-                <div className="hidden sm:block w-px bg-[#e2eaf8] self-stretch my-1" />
-                <AutocompleteInput
-                  value={location}
-                  onChange={setLocation}
-                  endpoint="/search/cities"
-                  buildLabel={(item) => item.name}
-                  buildSublabel={(item) => item.state}
-                  placeholder="City, state or remote..."
-                  icon={<MapPin size={16} className="text-primary" />}
-                  minChars={2}
-                />
-                <Button type="submit">
-                  Search Jobs <ArrowRight size={15} />
-                </Button>
-              </div>
-            </form>
+            <JobSearchBar
+              skillsValue={search}
+              onSkillsChange={setSearch}
+              locationValue={location}
+              onLocationChange={setLocation}
+              onSearch={handleSearch}
+              variant="home"
+            />
 
             {/* Upload resume CTA */}
             <button
@@ -208,17 +253,60 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── Featured Jobs ────────────────────────────── */}
+      {/* ─── Browse by Category ──────────────────────── */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <div className="section-label mb-3 mx-auto">Explore</div>
+            <h2
+              className="text-3xl font-bold text-[#0c1a3a] mb-3"
+              style={{ fontFamily: "Sora,sans-serif" }}
+            >
+              Browse Jobs by Category
+            </h2>
+            <p className="text-[#7a92c1]">
+              Explore thousands of open roles across every function and industry.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+            {categories.map((cat) => (
+              <Link
+                key={cat.id}
+                href={`/jobs?category=${encodeURIComponent(cat.name)}`}
+                className="card-flat p-6 rounded-2xl text-center hover:shadow-md hover:-translate-y-1 transition-all group"
+              >
+                <div
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3"
+                  style={{ backgroundColor: cat.color + "14" }}
+                >
+                  {cat.icon}
+                </div>
+                <h3
+                  className="font-semibold text-[#0c1a3a] mb-1 group-hover:text-primary transition-colors"
+                  style={{ fontFamily: "Sora,sans-serif" }}
+                >
+                  {cat.name}
+                </h3>
+                <p className="text-[#7a92c1] text-xs">
+                  {cat.count.toLocaleString()}+ jobs
+                </p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Featured Jobs (live from API) ───────────── */}
       <section className="py-20 bg-[#f0f5ff]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-10">
             <div>
-              <div className="section-label mb-3">Hand-picked for you</div>
+              <div className="section-label mb-3">Fresh off our feed</div>
               <h2
                 className="text-3xl font-bold text-[#0c1a3a]"
                 style={{ fontFamily: "Sora,sans-serif" }}
               >
-                Featured Jobs
+                Latest Jobs
               </h2>
             </div>
             <Link
@@ -229,10 +317,17 @@ export default function Home() {
             </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {featuredJobs.map((job) => (
-              <JobCard key={job.id} job={job} />
-            ))}
+            {jobsLoading
+              ? [...Array(6)].map((_, i) => <JobCardSkeleton key={i} />)
+              : featuredJobs.map((job) => (
+                  <BackendJobCard key={job.id} job={job} />
+                ))}
           </div>
+          {!jobsLoading && featuredJobs.length === 0 && (
+            <p className="text-center text-[#7a92c1] py-6">
+              New jobs are being added — check back soon.
+            </p>
+          )}
           <div className="text-center mt-10">
             <Link
               href="/jobs"
@@ -243,6 +338,144 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ─── How It Works ─────────────────────────────── */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <div className="section-label mb-3 mx-auto">Simple process</div>
+            <h2
+              className="text-3xl font-bold text-[#0c1a3a] mb-3"
+              style={{ fontFamily: "Sora,sans-serif" }}
+            >
+              How It Works
+            </h2>
+            <p className="text-[#7a92c1]">
+              From resume to offer letter — we cut out the manual search.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {HOW_IT_WORKS.map((step, i) => (
+              <div key={step.title} className="relative card-flat p-6 rounded-2xl">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-4">
+                  <step.icon size={20} />
+                </div>
+                <div className="text-[#a8bcd8] text-xs font-bold mb-1">
+                  STEP {i + 1}
+                </div>
+                <h3
+                  className="font-semibold text-[#0c1a3a] mb-2"
+                  style={{ fontFamily: "Sora,sans-serif" }}
+                >
+                  {step.title}
+                </h3>
+                <p className="text-[#7a92c1] text-sm leading-relaxed">
+                  {step.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+          <div className="text-center mt-12">
+            <button
+              onClick={() => setShowResume(true)}
+              className="btn-primary px-8 py-3.5 rounded-xl text-sm inline-flex items-center gap-2"
+            >
+              <Sparkles size={15} /> Upload Resume & Get Matched
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Top Companies Hiring ─────────────────────── */}
+      <section className="py-20 bg-[#f0f5ff]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-end justify-between mb-10">
+            <div>
+              <div className="section-label mb-3">Trusted employers</div>
+              <h2
+                className="text-3xl font-bold text-[#0c1a3a]"
+                style={{ fontFamily: "Sora,sans-serif" }}
+              >
+                Top Companies Hiring Now
+              </h2>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
+            {companies.map((co) => (
+              <Link
+                key={co.id}
+                href={`/jobs?title=${encodeURIComponent(co.name)}`}
+                className="card-flat p-6 rounded-2xl text-center hover:shadow-md hover:-translate-y-1 transition-all group"
+              >
+                <div
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center font-bold text-xl mx-auto mb-3 border"
+                  style={{
+                    backgroundColor: co.color + "14",
+                    color: co.color,
+                    borderColor: co.color + "28",
+                  }}
+                >
+                  {co.logo}
+                </div>
+                <h3
+                  className="font-semibold text-[#0c1a3a] text-sm mb-1 group-hover:text-primary transition-colors"
+                  style={{ fontFamily: "Sora,sans-serif" }}
+                >
+                  {co.name}
+                </h3>
+                <p className="text-[#7a92c1] text-xs flex items-center justify-center gap-1">
+                  <Building2 size={11} /> {co.jobs} open roles
+                </p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Testimonials ─────────────────────────────── */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <div className="section-label mb-3 mx-auto">Success stories</div>
+            <h2
+              className="text-3xl font-bold text-[#0c1a3a] mb-3"
+              style={{ fontFamily: "Sora,sans-serif" }}
+            >
+              Loved by Job Seekers
+            </h2>
+            <p className="text-[#7a92c1]">
+              Real stories from people who found their next role with us.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {testimonials.map((t) => (
+              <div key={t.id} className="card-flat p-6 rounded-2xl flex flex-col">
+                <Quote size={24} className="text-primary/30 mb-3" />
+                <div className="flex gap-0.5 mb-3">
+                  {[...Array(t.rating)].map((_, i) => (
+                    <Star key={i} size={13} className="fill-amber-400 text-amber-400" />
+                  ))}
+                </div>
+                <p className="text-[#2d4070] text-sm leading-relaxed mb-5 flex-1">
+                  &ldquo;{t.quote}&rdquo;
+                </p>
+                <div className="flex items-center gap-3 pt-4 border-t border-[#f0f5ff]">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0">
+                    {t.avatar}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-[#0c1a3a] text-sm truncate">
+                      {t.name}
+                    </p>
+                    <p className="text-[#7a92c1] text-xs truncate">{t.role}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ─── CTA ──────────────────────────────────────── */}
       <section className="py-20 bg-primary">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

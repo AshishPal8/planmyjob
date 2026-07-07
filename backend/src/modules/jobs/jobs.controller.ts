@@ -3,6 +3,7 @@ import { fetchRemotiveJobs } from "../scraper/remotive.service";
 import { fetchJSearchJobs } from "../scraper/jsearch.service";
 import {
   getJobBySlugService,
+  getJobSlugsForSitemapService,
   getJobsService,
   getSavedJobsService,
   saveJobsService,
@@ -23,13 +24,26 @@ export const getJobs = async (
   }
 };
 
+export const getJobSlugsForSitemap = async (
+  _req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const data = await getJobSlugsForSitemapService();
+    res.status(200).json({ success: true, data });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getJobBySlug = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const job = await getJobBySlugService(req.params.slug);
+    const job = await getJobBySlugService(req.params.slug, req.user?.id);
     if (!job) {
       res.status(404).json({ success: false, message: "Job not found" });
       return;

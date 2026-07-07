@@ -1,11 +1,13 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import {
   MapPin, Mail, Phone, Edit2, Plus, Trash2, Loader2,
   Globe, Link2, X, Code2, Users,
   Briefcase, GraduationCap, User as UserIcon, Sparkles, Upload,
-  FileText, ExternalLink,
+  FileText, ExternalLink, AlertCircle,
 } from "lucide-react";
+import { toast } from "sonner";
 import { useAuthStore, type User, type WorkExperience, type Education } from "@/store/auth-store";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/axios";
@@ -116,13 +118,21 @@ function Modal({ title, onClose, onSave, saving, children }: {
 
 export default function ProfilePage() {
   const { user, setUser } = useAuthStore();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   // modal states
   const [modal, setModal] = useState<
-    null | "basic" | "about" | "skills" | "social" | "exp-add" | "exp-edit" | "edu-add" | "edu-edit"
+    null | "basic" | "about" | "skills" | "social" | "exp-add" | "exp-edit" | "edu-add" | "edu-edit" | "resume"
   >(null);
+
+  // resume upload state
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [resumeStep, setResumeStep] = useState<"upload" | "uploading">("upload");
+  const [resumeError, setResumeError] = useState("");
+  const [resumeDragging, setResumeDragging] = useState(false);
+  const resumeInputRef = useRef<HTMLInputElement>(null);
 
   // draft states
   const [draftBasic, setDraftBasic] = useState({ name: "", phone: "", location: "", headline: "", openToWork: false });
@@ -140,9 +150,11 @@ export default function ProfilePage() {
     api.get("/user/profile")
       .then((res) => {
         const data = res.data?.data ?? res.data;
-        if (data) setUser({ ...user!, ...data });
+        if (data) setUser({ ...(user ?? {}), ...data } as User);
       })
-      .catch(() => {})
+      .catch(() => {
+        router.replace("/");
+      })
       .finally(() => setLoading(false));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -154,7 +166,7 @@ export default function ProfilePage() {
 
   if (!user) return null;
 
-  const completion = profileCompletion(user);
+  const completion = user.profileScore ?? profileCompletion(user);
   const isIncomplete = completion < 60;
 
   // ── save helper ──
@@ -179,8 +191,10 @@ export default function ProfilePage() {
       await api.put("/user/profile", payload);
       setUser({ ...user, ...patch });
       setModal(null);
+      return true;
     } catch {
-      alert("Failed to save. Please try again.");
+      toast.error("Failed to save. Please try again.");
+      return false;
     } finally {
       setSaving(false);
     }
@@ -198,6 +212,7 @@ export default function ProfilePage() {
   const openEditExp = (i: number) => { setDraftExp({ ...(user.workExperiences![i]) }); setEditExpIdx(i); setModal("exp-edit"); };
   const openAddEdu = () => { setDraftEdu({ degreeTitle: "", university: "", location: "", fromDate: "", toDate: null, isCurrent: false, percentage: null }); setEditEduIdx(null); setModal("edu-add"); };
   const openEditEdu = (i: number) => { setDraftEdu({ ...(user.educations![i]) }); setEditEduIdx(i); setModal("edu-edit"); };
+  const openResume = () => { setResumeFile(null); setResumeStep("upload"); setResumeError(""); setModal("resume"); };
 
   // ── save handlers ──
   const saveBasic = () => saveProfile(draftBasic);
@@ -234,6 +249,35 @@ export default function ProfilePage() {
     const s = skillInput.trim();
     if (s && !draftSkills.includes(s)) setDraftSkills([...draftSkills, s]);
     setSkillInput("");
+  };
+
+  // ── resume upload ──
+  const handleResumeFile = (f: File) => {
+    const ok = ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+    if (!ok.includes(f.type) && !f.name.match(/\.(pdf|docx)$/i)) {
+      setResumeError("Please upload a PDF or DOCX file");
+      return;
+    }
+    setResumeFile(f);
+    setResumeError("");
+  };
+
+  const uploadResume = async () => {
+    if (!resumeFile) return;
+    setResumeStep("uploading");
+    setResumeError("");
+    try {
+      const form = new FormData();
+      form.append("file", resumeFile);
+      const res = await api.post("/upload/file", form, { headers: { "Content-Type": "multipart/form-data" } });
+      const url = res.data?.data?.url;
+      if (!url) throw new Error("Invalid response");
+      const ok = await saveProfile({ resumeUrl: url });
+      if (!ok) setResumeStep("upload");
+    } catch {
+      setResumeError("Upload failed. Please try again.");
+      setResumeStep("upload");
+    }
   };
 
   return (
@@ -338,7 +382,7 @@ export default function ProfilePage() {
             </Section>
 
             {/* Resume */}
-            <Section title="Resume" icon={FileText}>
+            <Section title="Resume" icon={FileText} onEdit={openResume}>
               {user.resumeUrl ? (
                 <div className="flex items-center gap-3 p-3 bg-[#f8fbff] border border-[#e2eaf8] rounded-xl">
                   <div className="w-9 h-9 bg-red-50 border border-red-100 rounded-lg flex items-center justify-center text-red-500 text-[9px] font-bold">PDF</div>
@@ -350,10 +394,11 @@ export default function ProfilePage() {
                   </div>
                 </div>
               ) : (
-                <div className="border-2 border-dashed border-[#e2eaf8] rounded-xl p-4 text-center">
-                  <Upload size={18} className="text-[#c7d7f5] mx-auto mb-1" />
-                  <p className="text-xs text-[#7a92c1]">No resume uploaded yet</p>
-                </div>
+                <button onClick={openResume} className="w-full border-2 border-dashed border-[#e2eaf8] rounded-xl p-4 text-center hover:border-primary hover:text-primary transition-colors group">
+                  <Upload size={18} className="text-[#c7d7f5] group-hover:text-primary mx-auto mb-1 transition-colors" />
+                  <p className="text-xs text-[#7a92c1] group-hover:text-primary transition-colors">Click to upload resume</p>
+                  <p className="text-[10px] text-[#c7d7f5] mt-0.5">PDF, DOCX or TXT · max 10MB</p>
+                </button>
               )}
             </Section>
           </div>
@@ -581,6 +626,92 @@ export default function ProfilePage() {
             />
           </div>
         </Modal>
+      )}
+
+      {/* Resume Upload */}
+      {modal === "resume" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setModal(null)} />
+          <div className="relative bg-white rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+            {/* Header */}
+            <div className="bg-primary px-6 py-5 rounded-t-3xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-white font-bold text-lg" style={{ fontFamily: "Sora,sans-serif" }}>
+                    Upload your resume
+                  </h2>
+                  <p className="text-white/70 text-xs mt-0.5">
+                    We&apos;ll save it to your profile
+                  </p>
+                </div>
+                <button onClick={() => setModal(null)} className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30">
+                  <X size={15} />
+                </button>
+              </div>
+            </div>
+
+            <div className="px-6 py-5 space-y-4">
+              {/* Upload step */}
+              {resumeStep === "upload" && (
+                <>
+                  <div
+                    className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-colors ${
+                      resumeDragging ? "border-primary bg-primary/5" : resumeFile ? "border-primary/50 bg-primary/5" : "border-[#e2eaf8] hover:border-primary hover:bg-primary/5"
+                    }`}
+                    onDragOver={(e) => { e.preventDefault(); setResumeDragging(true); }}
+                    onDragLeave={() => setResumeDragging(false)}
+                    onDrop={(e) => { e.preventDefault(); setResumeDragging(false); const f = e.dataTransfer.files[0]; if (f) handleResumeFile(f); }}
+                    onClick={() => resumeInputRef.current?.click()}
+                  >
+                    <input ref={resumeInputRef} type="file" accept=".pdf,.docx" className="hidden"
+                      onChange={(e) => e.target.files?.[0] && handleResumeFile(e.target.files[0])} />
+                    {resumeFile ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
+                          <FileText size={24} className="text-primary" />
+                        </div>
+                        <p className="font-semibold text-sm text-[#0c1a3a]">{resumeFile.name}</p>
+                        <p className="text-[#7a92c1] text-xs">{(resumeFile.size / 1024).toFixed(0)} KB · click to change</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-14 h-14 bg-[#f0f5ff] rounded-2xl flex items-center justify-center">
+                          <Upload size={24} className="text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-[#0c1a3a] text-sm">Drop your resume here</p>
+                          <p className="text-[#7a92c1] text-xs mt-0.5">PDF or DOCX · max 10MB</p>
+                        </div>
+                        <Button variant="outline" size="sm" className="rounded-xl mt-1">Browse file</Button>
+                      </div>
+                    )}
+                  </div>
+                  {resumeError && (
+                    <div className="flex items-center gap-2 text-red-500 text-xs bg-red-50 border border-red-100 rounded-xl px-3 py-2">
+                      <AlertCircle size={13} /> {resumeError}
+                    </div>
+                  )}
+                  <div className="flex gap-3">
+                    <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setModal(null)}>Cancel</Button>
+                    <Button className="flex-1 rounded-xl" disabled={!resumeFile} onClick={uploadResume}>
+                      Upload
+                    </Button>
+                  </div>
+                </>
+              )}
+
+              {/* Uploading step */}
+              {resumeStep === "uploading" && (
+                <div className="text-center py-10">
+                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Loader2 size={28} className="text-primary animate-spin" />
+                  </div>
+                  <p className="font-semibold text-[#0c1a3a]">Uploading your resume...</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
