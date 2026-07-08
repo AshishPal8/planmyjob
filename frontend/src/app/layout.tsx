@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import "./globals.css";
 import { AuthModalTrigger } from "@/components/auth/AuthModalTrigger";
@@ -10,6 +10,11 @@ export const metadata: Metadata = {
   description:
     "Discover thousands of jobs from top companies. Upload your resume and get matched instantly.",
   keywords: "jobs, careers, hiring, employment, job search india",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({

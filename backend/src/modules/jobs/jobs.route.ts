@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   applyJob,
+  getAppliedJobs,
   getJobBySlug,
   getJobSlugsForSitemap,
   getJobs,
@@ -21,6 +22,9 @@ router.post("/match", optionalAuth, validateRequest(getJobsSchema), getJobs);
 
 // saved jobs — must come before /:slug
 router.get("/saved", requireAuth, getSavedJobs);
+
+// applied jobs — must come before /:slug
+router.get("/applied", requireAuth, getAppliedJobs);
 
 // sitemap feed — must come before /:slug
 router.get("/sitemap/all", getJobSlugsForSitemap);

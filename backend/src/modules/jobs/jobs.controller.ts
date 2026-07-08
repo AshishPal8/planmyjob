@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import { fetchRemotiveJobs } from "../scraper/remotive.service";
 import { fetchJSearchJobs } from "../scraper/jsearch.service";
 import {
+  getAppliedJobsService,
   getJobBySlugService,
   getJobSlugsForSitemapService,
   getJobsService,
@@ -86,6 +87,19 @@ export const getSavedJobs = async (
 ): Promise<void> => {
   try {
     const data = await getSavedJobsService(req.user!.id);
+    res.status(200).json({ success: true, data });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAppliedJobs = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const data = await getAppliedJobsService(req.user!.id);
     res.status(200).json({ success: true, data });
   } catch (error) {
     next(error);

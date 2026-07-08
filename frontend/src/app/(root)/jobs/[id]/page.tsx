@@ -185,8 +185,11 @@ export default async function JobDetailPage({ params }: Props) {
                     {job.title}
                   </h1>
 
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5">
-                    <span className="text-[#7a92c1] text-xs sm:text-sm font-medium shrink-0">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5 min-w-0">
+                    <span
+                      title={job.company}
+                      className="text-[#7a92c1] text-xs sm:text-sm font-medium truncate max-w-full min-w-0"
+                    >
                       {job.company}
                     </span>
 

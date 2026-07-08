@@ -7,19 +7,13 @@ const contactInfo = [
   {
     icon: Mail,
     label: "Email Us",
-    value: "support@findurajob.com",
+    value: "info@findurjob.com",
     sub: "We reply within 24 hours",
-  },
-  {
-    icon: Phone,
-    label: "Call Us",
-    value: "+91 98765 43210",
-    sub: "Mon–Fri, 9am – 6pm IST",
   },
   {
     icon: MapPin,
     label: "Office",
-    value: "Bengaluru, Karnataka",
+    value: "Noida, Uttar Pradesh",
     sub: "India",
   },
 ];

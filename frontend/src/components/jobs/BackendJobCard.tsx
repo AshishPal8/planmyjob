@@ -70,14 +70,17 @@ export default function BackendJobCard({ job }: { job: BackendJob }) {
             >
               {job.company[0]?.toUpperCase()}
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <h3
+                title={job.title}
                 className="font-semibold text-[#0c1a3a] text-[15px] leading-snug mb-0.5 group-hover:text-primary transition-colors line-clamp-2"
                 style={{ fontFamily: "Sora,sans-serif" }}
               >
                 {job.title}
               </h3>
-              <p className="text-[#7a92c1] text-sm">{job.company}</p>
+              <p title={job.company} className="text-[#7a92c1] text-sm truncate">
+                {job.company}
+              </p>
             </div>
           </div>
           <Button
@@ -115,39 +118,37 @@ export default function BackendJobCard({ job }: { job: BackendJob }) {
           )}
         </div>
 
-        <div className="mt-auto pt-3 border-t border-[#f0f5ff]">
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <span className="text-primary font-bold text-sm">
-                {job.salary || "Salary not disclosed"}
-              </span>
-              <p className="text-[#a8bcd8] text-xs mt-0.5">
-                {formatPostedDate(job.postedAt)}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Link
-                href={`/jobs/${job.slug}`}
-                className="text-xs px-3 py-1.5 rounded-lg hover:bg-primary/10 hover:text-primary text-[#7a92c1] transition-colors"
+        <div className="mt-auto pt-3 border-t border-[#f0f5ff] text-center">
+          <div>
+            <span className="text-primary font-bold text-sm">
+              {job.salary || "Salary not disclosed"}
+            </span>
+            <p className="text-[#a8bcd8] text-xs mt-0.5">
+              {formatPostedDate(job.postedAt)}
+            </p>
+          </div>
+          <div className="flex items-center justify-center gap-3 mt-3">
+            <Link
+              href={`/jobs/${job.slug}`}
+              className="text-xs px-3 py-1.5 rounded-lg hover:bg-primary/10 hover:text-primary text-[#7a92c1] transition-colors"
+            >
+              Details
+            </Link>
+            {job.isApplied ? (
+              <Button
+                disabled
+                className="text-xs px-4 py-1.5 rounded-lg gap-1.5 h-auto bg-green-50 text-green-700 border border-green-200 cursor-default hover:bg-green-50 disabled:opacity-100"
               >
-                Details
-              </Link>
-              {job.isApplied ? (
-                <Button
-                  disabled
-                  className="text-xs px-4 py-1.5 rounded-lg gap-1.5 h-auto bg-green-50 text-green-700 border border-green-200 cursor-default hover:bg-green-50 disabled:opacity-100"
-                >
-                  <CheckCircle2 size={13} /> Applied
-                </Button>
-              ) : (
-                <Button
-                  onClick={handleJobApply}
-                  className="text-xs px-4 py-1.5 rounded-lg gap-1.5 h-auto bg-primary hover:bg-primary/90 text-white"
-                >
-                  Apply <ExternalLink size={11} />
-                </Button>
-              )}
-            </div>
+                <CheckCircle2 size={13} /> Applied
+              </Button>
+            ) : (
+              <Button
+                onClick={handleJobApply}
+                className="text-xs px-4 py-1.5 rounded-lg gap-1.5 h-auto bg-primary hover:bg-primary/90 text-white"
+              >
+                Apply <ExternalLink size={11} />
+              </Button>
+            )}
           </div>
         </div>
       </div>

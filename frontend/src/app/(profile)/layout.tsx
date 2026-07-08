@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Briefcase, Menu, X, Home, Search, User, Bookmark, LogOut } from "lucide-react";
+import { Briefcase, Menu, X, Home, Search, User, Bookmark, Send, LogOut } from "lucide-react";
 import DashboardSidebar from "@/components/layouts/DashboardSidebar";
 import { useAuthStore } from "@/store/auth-store";
 import api from "@/lib/axios";
@@ -19,10 +19,11 @@ function MobileTopBar() {
   };
 
   const navLinks = [
-    { icon: Home, label: "Home", href: "/" },
+    { icon: Home, label: "Overview", href: "/dashboard" },
     { icon: Search, label: "Find Jobs", href: "/jobs" },
-    { icon: User, label: "Profile", href: "/profile" },
+    { icon: Send, label: "Applications", href: "/applications" },
     { icon: Bookmark, label: "Saved Jobs", href: "/saved-jobs" },
+    { icon: User, label: "Profile", href: "/profile" },
   ];
 
   return (
