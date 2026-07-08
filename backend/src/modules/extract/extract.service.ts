@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { gemini } from "../../config/gemini.config";
 import { extractedResumeSchema, type ExtractedResume } from "./extract.schema";
 
@@ -69,9 +70,15 @@ export const extractResumeData = async (
       /**
        * Retry on these — temporary issues worth trying next model for.
        * 404 means model name wrong/unavailable — also try next.
+       * A malformed/non-JSON response or a shape that fails validation is also
+       * worth retrying on the next model rather than failing the whole upload.
        * Throw immediately only on auth errors (bad API key).
        */
+      const isParseFailure =
+        error instanceof SyntaxError || error instanceof z.ZodError;
+
       const shouldRetry =
+        isParseFailure ||
         error?.message?.includes("503") ||
         error?.message?.includes("404") ||
         error?.message?.includes("Service Unavailable") ||

@@ -31,6 +31,7 @@ export const uploadResume = async (
         currentTitle: resume.currentTitle,
         experienceYears: resume.experienceYears,
         summary: resume.summary,
+        isProcessed: resume.isProcessed,
       },
     });
   } catch (error) {
