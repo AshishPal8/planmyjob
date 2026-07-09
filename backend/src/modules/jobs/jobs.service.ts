@@ -1,4 +1,4 @@
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "../../db";
 import { jobs } from "../../db/schema/job.schema";
 import { savedJobs, jobApplications } from "../../db/schema";
@@ -412,6 +412,52 @@ export const getSavedJobsService = async (userId: number) => {
     ...job,
     isSaved: 1,
     isApplied: appliedSet.has(job.id) ? 1 : 0,
+  }));
+};
+
+export const getAppliedJobsService = async (userId: number) => {
+  const rows = await db
+    .select({
+      id: jobs.id,
+      title: jobs.title,
+      slug: jobs.slug,
+      company: jobs.company,
+      location: jobs.location,
+      skills: jobs.skills,
+      salary: jobs.salary,
+      jobType: jobs.jobType,
+      applyUrl: jobs.applyUrl,
+      sourceUrl: jobs.sourceUrl,
+      postedAt: jobs.postedAt,
+      applyCount: jobs.applyCount,
+      appliedAt: jobApplications.createdAt,
+    })
+    .from(jobApplications)
+    .innerJoin(jobs, eq(jobApplications.jobId, jobs.id))
+    .where(
+      and(
+        eq(jobApplications.userId, userId),
+        eq(jobs.isActive, true),
+        eq(jobs.isDeleted, false),
+      ),
+    )
+    .orderBy(desc(jobApplications.createdAt));
+
+  if (rows.length === 0) return [];
+
+  const jobIds = rows.map((r) => r.id);
+
+  const savedRows = await db
+    .select({ jobId: savedJobs.jobId })
+    .from(savedJobs)
+    .where(and(eq(savedJobs.userId, userId), inArray(savedJobs.jobId, jobIds)));
+
+  const savedSet = new Set(savedRows.map((r) => r.jobId));
+
+  return rows.map((job) => ({
+    ...job,
+    isApplied: 1,
+    isSaved: savedSet.has(job.id) ? 1 : 0,
   }));
 };
 

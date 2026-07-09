@@ -84,14 +84,17 @@ export default function JobCard({
               {job.logo}
             </div>
             {/* Title + company */}
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <h3
+                title={job.title}
                 className="font-semibold text-[#0c1a3a] text-[15px] leading-snug mb-0.5 group-hover:text-primary transition-colors line-clamp-2"
                 style={{ fontFamily: "Sora,sans-serif" }}
               >
                 {job.title}
               </h3>
-              <p className="text-[#7a92c1] text-sm">{job.company}</p>
+              <p title={job.company} className="text-[#7a92c1] text-sm truncate">
+                {job.company}
+              </p>
             </div>
           </div>
           {/* Save button */}
@@ -133,28 +136,26 @@ export default function JobCard({
         </div>
 
         {/* Footer */}
-        <div className="mt-auto pt-3 border-t border-[#f0f5ff]">
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <span className="text-primary font-bold text-sm">
-                {job.salary}
-              </span>
-              <p className="text-[#a8bcd8] text-xs mt-0.5">{job.posted}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Link
-                href={`/jobs/${job.id}`}
-                className="text-xs px-3 py-1.5 rounded-lg hover:bg-primary/20 hover:text-primary transition-colors"
-              >
-                Details
-              </Link>
-              <Button
-                onClick={handleApply}
-                className="text-xs px-4 py-1.5 rounded-lg gap-1.5 h-auto bg-primary hover:bg-primary/90 text-white"
-              >
-                Apply <ExternalLink size={11} />
-              </Button>
-            </div>
+        <div className="mt-auto pt-3 border-t border-[#f0f5ff] text-center">
+          <div>
+            <span className="text-primary font-bold text-sm">
+              {job.salary}
+            </span>
+            <p className="text-[#a8bcd8] text-xs mt-0.5">{job.posted}</p>
+          </div>
+          <div className="flex items-center justify-center gap-3 mt-3">
+            <Link
+              href={`/jobs/${job.id}`}
+              className="text-xs px-3 py-1.5 rounded-lg hover:bg-primary/20 hover:text-primary transition-colors"
+            >
+              Details
+            </Link>
+            <Button
+              onClick={handleApply}
+              className="text-xs px-4 py-1.5 rounded-lg gap-1.5 h-auto bg-primary hover:bg-primary/90 text-white"
+            >
+              Apply <ExternalLink size={11} />
+            </Button>
           </div>
           {/* Stats */}
           {(job.applicants || job.views) && (

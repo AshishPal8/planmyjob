@@ -107,7 +107,7 @@ export default function Home() {
       />
 
       {/* ─── Hero ─────────────────────────────────────── */}
-      <section className="relative min-h-[92vh] flex items-center pt-16 overflow-hidden bg-gradient-soft">
+      <section className="relative flex items-center pt-24 overflow-hidden bg-gradient-soft">
         {/* Background elements */}
         <div className="absolute inset-0 dot-grid opacity-[0.35]" />
         <div className="absolute top-0 right-0 w-[700px] h-[700px] bg-primary/20 rounded-full blur-3xl pointer-events-none" />
@@ -159,10 +159,10 @@ export default function Home() {
           ))}
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 z-10">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-14 z-10">
           <div className="max-w-3xl">
             {/* Pill */}
-            <div className="section-label mb-6">
+            <div className="section-label mb-4">
               <Sparkles size={12} />
               1,20,000+ Jobs Updated Daily · 100% Free
             </div>
@@ -174,7 +174,7 @@ export default function Home() {
               }
             `}</style>
             <h1
-              className="text-5xl lg:text-[68px] font-extrabold text-[#0c1a3a] leading-[1.1] mb-6"
+              className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[#0c1a3a] leading-[1.1] mb-4"
               style={{ fontFamily: "Sora, sans-serif" }}
             >
               Find Your Dream Job
@@ -188,7 +188,7 @@ export default function Home() {
               </span>
             </h1>
 
-            <p className="text-[#2d4070] text-xl mb-10 leading-relaxed max-w-xl">
+            <p className="text-[#2d4070] text-lg mb-7 leading-relaxed max-w-xl">
               Upload your resume and instantly get matched with jobs that fit
               your skills & Apply
             </p>
@@ -237,7 +237,7 @@ export default function Home() {
           </div>
 
           {/* Stats row */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-16">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-10">
             {stats.map((stat, i) => (
               <div key={i} className="card-flat p-4 text-center rounded-2xl">
                 <div
@@ -254,9 +254,9 @@ export default function Home() {
       </section>
 
       {/* ─── Browse by Category ──────────────────────── */}
-      <section className="py-20 bg-white">
+      {/* <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-12">
+          <div className="text-center max-w-2xl mx-auto mb-9">
             <div className="section-label mb-3 mx-auto">Explore</div>
             <h2
               className="text-3xl font-bold text-[#0c1a3a] mb-3"
@@ -294,24 +294,22 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* ─── Featured Jobs (live from API) ───────────── */}
-      <section className="py-20 bg-[#f0f5ff]">
+      <section className="py-16 bg-[#f0f5ff]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-end justify-between mb-10">
-            <div>
-              <div className="section-label mb-3">Fresh off our feed</div>
-              <h2
-                className="text-3xl font-bold text-[#0c1a3a]"
-                style={{ fontFamily: "Sora,sans-serif" }}
-              >
-                Latest Jobs
-              </h2>
-            </div>
+          <div className="text-center max-w-2xl mx-auto mb-8">
+            <div className="section-label mb-3 mx-auto">Fresh off our feed</div>
+            <h2
+              className="text-3xl font-bold text-[#0c1a3a]"
+              style={{ fontFamily: "Sora,sans-serif" }}
+            >
+              Latest Jobs
+            </h2>
             <Link
               href="/jobs"
-              className="hidden md:flex items-center gap-1 text-primary hover:underline text-sm font-medium"
+              className="hidden md:inline-flex items-center gap-1 text-primary hover:underline text-sm font-medium mt-2"
             >
               See all jobs <ArrowRight size={14} />
             </Link>
@@ -328,7 +326,7 @@ export default function Home() {
               New jobs are being added — check back soon.
             </p>
           )}
-          <div className="text-center mt-10">
+          <div className="text-center mt-8">
             <Link
               href="/jobs"
               className="btn-secondary px-8 py-3 rounded-xl text-sm inline-flex items-center gap-2"
@@ -340,9 +338,9 @@ export default function Home() {
       </section>
 
       {/* ─── How It Works ─────────────────────────────── */}
-      <section className="py-20 bg-white">
+      <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-14">
+          <div className="text-center max-w-2xl mx-auto mb-10">
             <div className="section-label mb-3 mx-auto">Simple process</div>
             <h2
               className="text-3xl font-bold text-[#0c1a3a] mb-3"
@@ -375,7 +373,7 @@ export default function Home() {
               </div>
             ))}
           </div>
-          <div className="text-center mt-12">
+          <div className="text-center mt-8">
             <button
               onClick={() => setShowResume(true)}
               className="btn-primary px-8 py-3.5 rounded-xl text-sm inline-flex items-center gap-2"
@@ -387,9 +385,9 @@ export default function Home() {
       </section>
 
       {/* ─── Top Companies Hiring ─────────────────────── */}
-      <section className="py-20 bg-[#f0f5ff]">
+      <section className="py-16 bg-[#f0f5ff]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-end justify-between mb-10">
+          <div className="flex items-end justify-between mb-8">
             <div>
               <div className="section-label mb-3">Trusted employers</div>
               <h2
@@ -433,9 +431,9 @@ export default function Home() {
       </section>
 
       {/* ─── Testimonials ─────────────────────────────── */}
-      <section className="py-20 bg-white">
+      <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-14">
+          <div className="text-center max-w-2xl mx-auto mb-10">
             <div className="section-label mb-3 mx-auto">Success stories</div>
             <h2
               className="text-3xl font-bold text-[#0c1a3a] mb-3"
@@ -477,7 +475,7 @@ export default function Home() {
       </section>
 
       {/* ─── CTA ──────────────────────────────────────── */}
-      <section className="py-20 bg-primary">
+      <section className="py-16 bg-primary">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative bg-gradient-brand rounded-3xl p-12 text-center overflow-hidden">
             <div className="absolute inset-0 dot-grid opacity-10" />

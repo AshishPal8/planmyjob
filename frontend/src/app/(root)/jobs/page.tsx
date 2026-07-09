@@ -278,11 +278,11 @@ function JobsContent() {
       </section>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex gap-7">
+        <div className="flex flex-col lg:flex-row gap-5 lg:gap-7">
           <aside
-            className={`${showFilters ? "block" : "hidden"} lg:block w-60 shrink-0`}
+            className={`${showFilters ? "block" : "hidden"} lg:block w-full lg:w-60 lg:shrink-0`}
           >
-            <div className="bg-white border border-[#e2eaf8] rounded-2xl p-5 sticky top-24 shadow-card space-y-6">
+            <div className="bg-white border border-[#e2eaf8] rounded-2xl p-5 lg:sticky lg:top-24 shadow-card space-y-6">
               <div>
                 <h3
                   className="text-[#0c1a3a] text-sm font-semibold mb-3"

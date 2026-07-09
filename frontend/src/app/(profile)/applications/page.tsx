@@ -3,12 +3,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Search,
-  Bookmark,
-  Trash2,
+  Send,
   MapPin,
   Clock,
   ExternalLink,
   Loader2,
+  CheckCircle2,
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import { useAuthAction } from "@/hooks/use-auth-action";
@@ -22,37 +22,26 @@ import {
   getLogoColor,
 } from "@/lib/jobs";
 
-export default function SavedJobsPage() {
+type AppliedJob = BackendJob & { appliedAt: string | null };
+
+export default function ApplicationsPage() {
   const { user } = useAuthStore();
   const { execute } = useAuthAction();
-  const [saved, setSaved] = useState<BackendJob[]>([]);
+  const [applications, setApplications] = useState<AppliedJob[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
     api
-      .get("/jobs/saved")
-      .then((res) => setSaved(res.data?.data ?? []))
-      .catch(() => setSaved([]))
+      .get("/jobs/applied")
+      .then((res) => setApplications(res.data?.data ?? []))
+      .catch(() => setApplications([]))
       .finally(() => setLoading(false));
   }, [user]);
 
-  const remove = (id: number) => {
-    execute(async () => {
-      setSaved((prev) => prev.filter((j) => j.id !== id));
-      try {
-        await api.post(`/jobs/save/${id}`);
-      } catch {
-        // Refetch on failure so the list stays in sync with the server
-        api.get("/jobs/saved").then((res) => setSaved(res.data?.data ?? []));
-      }
-    });
-  };
-
-  const handleApply = (job: BackendJob) => {
+  const handleReapply = (job: AppliedJob) => {
     execute(() => {
       window.open(getApplyUrl(job), "_blank", "noopener,noreferrer");
-      api.post(`/jobs/apply/${job.id}`).catch(() => {});
     });
   };
 
@@ -71,23 +60,24 @@ export default function SavedJobsPage() {
             className="text-2xl font-bold text-[#0c1a3a]"
             style={{ fontFamily: "Sora,sans-serif" }}
           >
-            Saved Jobs
+            My Applications
           </h1>
           <p className="text-[#7a92c1] text-sm mt-1">
-            {saved.length} job{saved.length === 1 ? "" : "s"} saved
+            {applications.length} application
+            {applications.length === 1 ? "" : "s"} submitted
           </p>
         </div>
         <Link
           href="/jobs"
           className="btn-primary px-5 py-2.5 rounded-xl text-sm flex items-center gap-2"
         >
-          <Search size={14} /> Find More
+          <Search size={14} /> Find More Jobs
         </Link>
       </div>
 
-      {saved.length > 0 ? (
+      {applications.length > 0 ? (
         <div className="space-y-4">
-          {saved.map((job) => {
+          {applications.map((job) => {
             const logoColor = getLogoColor(job.company);
             return (
               <div
@@ -121,13 +111,9 @@ export default function SavedJobsPage() {
                           {job.company}
                         </p>
                       </div>
-                      <button
-                        onClick={() => remove(job.id)}
-                        aria-label="Remove from saved"
-                        className="text-[#a8bcd8] hover:text-red-500 transition-colors shrink-0 p-1 rounded-lg hover:bg-red-50"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                      <span className="shrink-0 flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 border border-green-100 px-2.5 py-1 rounded-full">
+                        <CheckCircle2 size={12} /> Applied
+                      </span>
                     </div>
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[#7a92c1] mt-2">
                       <span className="flex items-center gap-1.5">
@@ -155,14 +141,14 @@ export default function SavedJobsPage() {
                 </div>
                 <div className="flex flex-wrap items-center justify-between gap-2 mt-4 pt-4 border-t border-[#f0f5ff]">
                   <span className="text-[#a8bcd8] text-xs">
-                    Saved · {formatPostedDate(job.postedAt)}
+                    Applied · {formatPostedDate(job.appliedAt)}
                   </span>
                   <div className="flex gap-2">
                     <Link href={`/jobs/${job.slug}`}>
                       <Button variant="ghost">View Details</Button>
                     </Link>
-                    <Button onClick={() => handleApply(job)}>
-                      Apply <ExternalLink size={10} />
+                    <Button onClick={() => handleReapply(job)}>
+                      View Application <ExternalLink size={10} />
                     </Button>
                   </div>
                 </div>
@@ -173,16 +159,16 @@ export default function SavedJobsPage() {
       ) : (
         <div className="text-center py-24 bg-white rounded-2xl border border-[#e2eaf8] shadow-card">
           <div className="w-20 h-20 bg-blue-50 border border-blue-100 rounded-full flex items-center justify-center mx-auto mb-5">
-            <Bookmark size={28} className="text-blue-600" />
+            <Send size={28} className="text-blue-600" />
           </div>
           <h3
             className="text-[#0c1a3a] text-xl font-bold mb-2"
             style={{ fontFamily: "Sora,sans-serif" }}
           >
-            No saved jobs yet
+            No applications yet
           </h3>
           <p className="text-[#7a92c1] mb-6 text-sm">
-            Browse jobs and click the bookmark icon to save them here.
+            Jobs you apply to will show up here so you can track them.
           </p>
           <Link
             href="/jobs"

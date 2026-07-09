@@ -117,7 +117,7 @@ export default function Navbar({
           </div>
 
           {/* Right actions */}
-          <div className="hidden lg:flex items-center gap-3">
+          <div className="flex items-center gap-1 md:gap-3">
             {user ? (
               <>
                 {/* <Link
@@ -129,6 +129,14 @@ export default function Navbar({
                 >
                   <Bell size={16} />
                 </Link> */}
+
+                 {/* Mobile hamburger */}
+                  <button
+                    onClick={() => setOpen(!open)}
+                    className="lg:hidden text-[#2d4070] p-2 rounded-lg hover:bg-primary/10"
+                  >
+                    {open ? <X size={20} /> : <Menu size={20} />}
+                  </button>
 
                 <DropdownMenu>
                   <DropdownMenuTrigger className="flex items-center gap-2.5 px-3 py-1.5 bg-[#f8fbff] border border-[#e2eaf8] rounded-2xl hover:border-blue-300 hover:shadow-sm transition-all focus:outline-none">
@@ -253,13 +261,7 @@ export default function Navbar({
             )}
           </div>
 
-          {/* Mobile hamburger */}
-          <button
-            onClick={() => setOpen(!open)}
-            className="lg:hidden text-[#2d4070] p-2 rounded-lg hover:bg-primary/10"
-          >
-            {open ? <X size={20} /> : <Menu size={20} />}
-          </button>
+         
         </div>
       </div>
 

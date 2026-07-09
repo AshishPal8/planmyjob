@@ -45,7 +45,12 @@ export const uploadAndProcessResume = async (
       folder: "/planmyjob/resumes",
       useUniqueFileName: true,
     }),
-    extractResumeData(file.buffer),
+    // Never let a parsing failure (bad AI response, all models down, etc.)
+    // lose the uploaded file — fall back to an unprocessed row instead.
+    extractResumeData(file.buffer).catch((error) => {
+      console.error("Resume extraction failed, saving file without parsed data:", error);
+      return null;
+    }),
   ]);
 
   const inserted = await db
@@ -54,16 +59,16 @@ export const uploadAndProcessResume = async (
       fileUrl: ikResult.url,
       fileId: ikResult.fileId,
       originalName: file.originalname,
-      extractedName: extractedData.name,
-      extractedEmail: extractedData.email,
-      extractedPhone: extractedData.phone,
-      currentTitle: extractedData.currentTitle,
-      experienceYears: extractedData.experienceYears,
-      education: extractedData.education,
-      summary: extractedData.summary,
-      skills: extractedData.skills ?? [],
-      extractedData: extractedData,
-      isProcessed: true,
+      extractedName: extractedData?.name,
+      extractedEmail: extractedData?.email,
+      extractedPhone: extractedData?.phone,
+      currentTitle: extractedData?.currentTitle,
+      experienceYears: extractedData?.experienceYears,
+      education: extractedData?.education,
+      summary: extractedData?.summary,
+      skills: extractedData?.skills ?? [],
+      extractedData: extractedData ?? undefined,
+      isProcessed: extractedData !== null,
     })
     .returning();
 

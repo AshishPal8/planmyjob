@@ -53,13 +53,11 @@ export default function Footer() {
             </p>
             <div className="space-y-2 text-sm text-white/40">
               <div className="flex items-center gap-2">
-                <Mail size={13} /> hello@findurjob.in
+                <Mail size={13} /> info@findurjob.in
               </div>
+              
               <div className="flex items-center gap-2">
-                <Phone size={13} /> +91 98765 43210
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPin size={13} /> Bengaluru, India
+                <MapPin size={13} /> Noida, India
               </div>
             </div>
           </div>
@@ -92,7 +90,7 @@ export default function Footer() {
         <hr className="border-white/10 mb-6" />
         <div className="flex flex-col md:flex-row items-center justify-between gap-3">
           <p className="text-white/30 text-sm">
-            © 2025 FindurJob Technologies Pvt. Ltd. All rights reserved.
+            © {new Date().getFullYear()} FindurJob Technologies Pvt. Ltd. All rights reserved.
           </p>
           <div className="flex gap-5">
             {[

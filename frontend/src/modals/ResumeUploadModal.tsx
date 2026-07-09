@@ -80,7 +80,17 @@ export default function ResumeUploadModal({
         throw new Error("Invalid upload response");
       }
 
-      const { skills: returnedSkills, currentTitle, experienceYears, summary: returnedSummary } = data.data;
+      const { skills: returnedSkills, currentTitle, experienceYears, summary: returnedSummary, isProcessed } = data.data;
+
+      if (!isProcessed) {
+        // File was saved, but AI parsing didn't succeed — don't pretend we
+        // found 0 skills; let the user retry instead.
+        setError(
+          "We saved your resume but couldn't analyse it automatically. Please try uploading again.",
+        );
+        setStep("upload");
+        return;
+      }
 
       setSkills(Array.isArray(returnedSkills) ? returnedSkills : []);
       setRole(currentTitle || "Software Engineer");

@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import api from "@/lib/axios";
@@ -9,8 +10,8 @@ import {
   Send,
   Bookmark,
   User,
-  Bell,
-  Settings,
+  // Bell,
+  // Settings,
   LogOut,
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
@@ -18,17 +19,26 @@ import { useAuthStore } from "@/store/auth-store";
 const navItems = [
   { icon: Home, label: "Overview", href: "/dashboard" },
   { icon: Search, label: "Find Jobs", href: "/jobs" },
-  { icon: Send, label: "Applications", href: "/dashboard" },
+  { icon: Send, label: "Applications", href: "/applications" },
   { icon: Bookmark, label: "Saved Jobs", href: "/saved-jobs" },
   { icon: User, label: "Profile", href: "/profile" },
-  { icon: Bell, label: "Alerts", href: "/dashboard" },
-  { icon: Settings, label: "Settings", href: "/dashboard" },
+  // { icon: Bell, label: "Alerts", href: "/dashboard" },
+  // { icon: Settings, label: "Settings", href: "/dashboard" },
 ];
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout: clearAuth } = useAuthStore();
+  const [applicationCount, setApplicationCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    api
+      .get("/jobs/applied")
+      .then((res) => setApplicationCount((res.data?.data ?? []).length))
+      .catch(() => setApplicationCount(0));
+  }, [user]);
 
   if (!user) return null;
 
@@ -99,9 +109,15 @@ export default function DashboardSidebar() {
           >
             <item.icon size={16} />
             {item.label}
-            {item.label === "Applications" && (
-              <span className="ml-auto w-5 h-5 bg-primary rounded-full text-white text-[10px] flex items-center justify-center">
-                2
+            {item.label === "Applications" && applicationCount > 0 && (
+              <span
+                className={`ml-auto w-5 h-5 rounded-full text-[10px] flex items-center justify-center ${
+                  pathname === item.href
+                    ? "bg-white text-primary"
+                    : "bg-primary text-white"
+                }`}
+              >
+                {applicationCount}
               </span>
             )}
           </Link>

@@ -1,16 +1,18 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   MapPin, Mail, Phone, Edit2, Plus, Trash2, Loader2,
   Globe, Link2, X, Code2, Users,
   Briefcase, GraduationCap, User as UserIcon, Sparkles, Upload,
-  FileText, ExternalLink, AlertCircle,
+  FileText, ExternalLink, AlertCircle, Bookmark, ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthStore, type User, type WorkExperience, type Education } from "@/store/auth-store";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/axios";
+import { type BackendJob, formatPostedDate, getLogoColor } from "@/lib/jobs";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -121,6 +123,8 @@ export default function ProfilePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savedJobs, setSavedJobs] = useState<BackendJob[]>([]);
+  const [savedLoading, setSavedLoading] = useState(true);
 
   // modal states
   const [modal, setModal] = useState<
@@ -156,6 +160,11 @@ export default function ProfilePage() {
         router.replace("/");
       })
       .finally(() => setLoading(false));
+
+    api.get("/jobs/saved")
+      .then((res) => setSavedJobs(res.data?.data ?? []))
+      .catch(() => setSavedJobs([]))
+      .finally(() => setSavedLoading(false));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) return (
@@ -497,6 +506,63 @@ export default function ProfilePage() {
               )}
             </Section>
 
+            {/* Saved Jobs */}
+            <div className="bg-white border border-[#e2eaf8] rounded-2xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <Bookmark size={15} className="text-primary" />
+                  </div>
+                  <h3 className="font-bold text-[#0c1a3a] text-sm" style={{ fontFamily: "Sora,sans-serif" }}>Saved Jobs</h3>
+                </div>
+                <Link href="/saved-jobs" className="text-xs font-medium text-primary hover:underline flex items-center gap-1">
+                  View all <ArrowRight size={11} />
+                </Link>
+              </div>
+
+              {savedLoading ? (
+                <div className="flex justify-center py-6">
+                  <Loader2 size={20} className="text-primary animate-spin" />
+                </div>
+              ) : savedJobs.length === 0 ? (
+                <Link href="/jobs" className="w-full block border-2 border-dashed border-[#e2eaf8] rounded-xl p-4 text-xs text-[#7a92c1] hover:border-primary hover:text-primary transition-colors text-center">
+                  No saved jobs yet — browse jobs and bookmark the ones you like
+                </Link>
+              ) : (
+                <div className="space-y-3">
+                  {savedJobs.slice(0, 3).map((job) => {
+                    const logoColor = getLogoColor(job.company);
+                    return (
+                      <Link
+                        key={job.id}
+                        href={`/jobs/${job.slug}`}
+                        className="flex items-center gap-3 p-2 -mx-2 rounded-xl hover:bg-[#f8fbff] transition-colors group"
+                      >
+                        <div
+                          className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 border"
+                          style={{
+                            backgroundColor: logoColor + "14",
+                            color: logoColor,
+                            borderColor: logoColor + "28",
+                          }}
+                        >
+                          {job.company[0]?.toUpperCase()}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[#0c1a3a] text-sm font-semibold truncate group-hover:text-primary transition-colors">
+                            {job.title}
+                          </p>
+                          <p className="text-[#7a92c1] text-xs truncate">
+                            {job.company} · {formatPostedDate(job.postedAt)}
+                          </p>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
           </div>
         </div>
       </div>
@@ -616,7 +682,7 @@ export default function ProfilePage() {
             <span className="text-sm text-[#2d4070]">Currently studying here</span>
           </label>
           <div>
-            <label className="text-xs font-semibold text-[#7a92c1] mb-1 block">Percentage / CGPA (optional)</label>
+            <label className="text-xs font-semibold text-[#7a92c1] mb-1 block">Percentage</label>
             <input
               type="number" step="0.1" min="0" max="100"
               value={draftEdu.percentage ?? ""}
