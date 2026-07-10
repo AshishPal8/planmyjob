@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import api from "@/lib/axios";
+import { trackEvent } from "@/lib/analytics";
 
 interface Props {
   open: boolean;
@@ -97,6 +98,10 @@ export default function ResumeUploadModal({
       setExperience(typeof experienceYears === "number" ? experienceYears : 0);
       setSummary(returnedSummary || "");
       setScore(Math.min(100, 65 + (Array.isArray(returnedSkills) ? returnedSkills.length : 0)));
+
+      trackEvent("resume_uploaded", {
+        skills_count: Array.isArray(returnedSkills) ? returnedSkills.length : 0,
+      });
 
       onComplete(
         Array.isArray(returnedSkills) ? returnedSkills : [],

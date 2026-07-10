@@ -21,6 +21,7 @@ import {
 } from "@/lib/jobs";
 import { useAuthAction } from "@/hooks/use-auth-action";
 import api from "@/lib/axios";
+import { trackEvent } from "@/lib/analytics";
 
 export type { BackendJob };
 
@@ -34,12 +35,17 @@ export default function BackendJobCard({ job }: { job: BackendJob }) {
   const handleJobApply: any = async () => {
     execute(() => window.open(applyUrl, "_blank", "noopener,noreferrer"));
 
+    trackEvent("job_apply", { job_id: job.id, job_title: job.title, company: job.company });
     await api.post(`/jobs/apply/${job.id}`);
   }
 
   const handleSaveToggle = () => {
     execute(async () => {
-      setSaved((prev) => !prev);
+      setSaved((prev) => {
+        const next = !prev;
+        if (next) trackEvent("save_job", { job_id: job.id, job_title: job.title });
+        return next;
+      });
       await api.post(`/jobs/save/${job.id}`);
     });
   };

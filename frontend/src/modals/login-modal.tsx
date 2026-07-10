@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { envConfig } from "@/config/env.config";
 import Image from "next/image";
+import { trackEvent } from "@/lib/analytics";
 import { useLoginModal } from "@/store/useLoginModal";
 import { useMediaQuery } from "../hooks/use-media-query";
 import {
@@ -59,9 +60,10 @@ const LoginModal = () => {
         <div className="space-y-4">
           <Button
             variant="outline"
-            onClick={() =>
-              (window.location.href = `${envConfig.apiUrl}/auth/google`)
-            }
+            onClick={() => {
+              trackEvent("login");
+              window.location.href = `${envConfig.apiUrl}/auth/google`;
+            }}
             size="lg"
             className="w-full gap-3 h-12 cursor-pointer"
           >
@@ -76,7 +78,7 @@ const LoginModal = () => {
   if (isDesktop) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden border-none rounded-3xl">
+        <DialogContent className="sm:max-w-100 p-0 overflow-hidden border-none rounded-3xl">
           {Content}
         </DialogContent>
       </Dialog>
