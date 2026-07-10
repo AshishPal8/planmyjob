@@ -11,6 +11,9 @@ import {
   Star,
   Quote,
   Building2,
+  CheckCircle2,
+  TrendingUp,
+  Zap,
 } from "lucide-react";
 import BackendJobCard from "@/components/jobs/BackendJobCard";
 import JobCardSkeleton from "@/components/jobs/JobCardSkeleton";
@@ -107,141 +110,206 @@ export default function Home() {
       />
 
       {/* ─── Hero ─────────────────────────────────────── */}
-      <section className="relative flex items-center pt-24 overflow-hidden bg-gradient-soft">
+      <section className="relative overflow-hidden bg-gradient-soft pt-28 lg:pt-32 pb-14 lg:pb-20">
         {/* Background elements */}
-        <div className="absolute inset-0 dot-grid opacity-[0.35]" />
-        <div className="absolute top-0 right-0 w-[700px] h-[700px] bg-primary/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-primary/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute inset-0 dot-grid opacity-[0.3]" />
+        <div className="absolute -top-40 -right-32 w-[620px] h-[620px] bg-primary/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-48 -left-40 w-[460px] h-[460px] bg-sky-300/25 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Floating job cards */}
-        <div className="hidden xl:block absolute right-12 top-1/2 -translate-y-1/2 space-y-3 animate-float pointer-events-none opacity-90">
-          {[
-            {
-              title: "Senior Engineer",
-              co: "Google",
-              salary: "₹45–80L",
-              color: "#4285F4",
-            },
-            {
-              title: "Product Manager",
-              co: "Swiggy",
-              salary: "₹30–55L",
-              color: "#FC8019",
-            },
-            {
-              title: "Data Scientist",
-              co: "Flipkart",
-              salary: "₹25–50L",
-              color: "#2874F0",
-            },
-          ].map((j, i) => (
-            <div
-              key={i}
-              className={`card px-4 py-3 w-64 ${i === 1 ? "ml-6" : ""}`}
-            >
-              <div className="flex items-center gap-2.5">
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shrink-0"
-                  style={{ backgroundColor: j.color + "18", color: j.color }}
+        <style>{`
+          @keyframes countrySlideUp {
+            from { transform: translateY(40px); opacity: 0; }
+            to   { transform: translateY(0);    opacity: 1; }
+          }
+        `}</style>
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-12 xl:gap-16 items-center">
+            {/* ── Left column ───────────────────────────── */}
+            <div className="max-w-xl">
+              {/* Pill */}
+              <div className="section-label mb-5">
+                <Sparkles size={12} />
+                1,20,000+ Jobs Updated Daily · 100% Free
+              </div>
+
+              <h1
+                className="text-4xl sm:text-5xl lg:text-[3.5rem] font-extrabold text-[#0c1a3a] leading-[1.08] mb-5"
+                style={{ fontFamily: "Sora, sans-serif" }}
+              >
+                Find Your Dream Job in{" "}
+                <span
+                  key={countryIdx}
+                  className="text-gradient inline-block"
+                  style={{ animation: "countrySlideUp 0.5s cubic-bezier(0.22,1,0.36,1) forwards" }}
                 >
-                  {j.co[0]}
+                  {COUNTRIES[countryIdx]}
+                </span>
+              </h1>
+
+              <p className="text-[#2d4070] text-lg mb-7 leading-relaxed">
+                Upload your resume and instantly get matched with jobs that fit
+                your skills — then apply in a single click.
+              </p>
+
+              {/* Search bar */}
+              <JobSearchBar
+                skillsValue={search}
+                onSkillsChange={setSearch}
+                locationValue={location}
+                onLocationChange={setLocation}
+                onSearch={handleSearch}
+                variant="home"
+              />
+
+              {/* Upload resume CTA */}
+              <button
+                onClick={() => setShowResume(true)}
+                className="inline-flex items-center gap-2 text-sm text-primary-600 font-medium hover:text-primary-700 transition-colors group"
+              >
+                <span className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center text-white group-hover:bg-primary-700 transition-colors">
+                  <Sparkles size={13} />
+                </span>
+                Upload resume for instant job matching
+                <ChevronRight size={14} className="transition-transform group-hover:translate-x-0.5" />
+              </button>
+
+              {/* Popular searches */}
+              <div className="flex flex-wrap items-center gap-2 mt-6 text-sm">
+                <span className="text-[#7a92c1]">Trending:</span>
+                {[
+                  { label: "React Developer", skills: "React" },
+                  { label: "Product Manager", skills: "Product Management" },
+                  { label: "Data Scientist", skills: "Python,Machine Learning" },
+                  { label: "DevOps Engineer", skills: "Docker,Kubernetes" },
+                ].map(({ label, skills }) => (
+                  <Link
+                    key={label}
+                    href={`/jobs?skills=${encodeURIComponent(skills)}`}
+                    className="px-3 py-1.5 bg-white border border-[#e2eaf8] text-[#2d4070] rounded-xl text-xs font-medium hover:border-blue-300 hover:text-blue-600 transition-all"
+                  >
+                    {label}
+                  </Link>
+                ))}
+              </div>
+
+              {/* Social proof */}
+              <div className="flex items-center gap-3 mt-8">
+                <div className="flex -space-x-2.5">
+                  {["#2563eb", "#7c3aed", "#059669", "#ea580c"].map((c, i) => (
+                    <div
+                      key={i}
+                      className="w-9 h-9 rounded-full border-2 border-white flex items-center justify-center text-white text-xs font-bold"
+                      style={{ backgroundColor: c }}
+                    >
+                      {["A", "P", "S", "R"][i]}
+                    </div>
+                  ))}
                 </div>
                 <div>
-                  <p className="text-[#0c1a3a] text-xs font-semibold">
-                    {j.title}
-                  </p>
-                  <p className="text-[#7a92c1] text-[10px]">
-                    {j.co} · {j.salary}
+                  <div className="flex items-center gap-0.5">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} size={13} className="fill-amber-400 text-amber-400" />
+                    ))}
+                  </div>
+                  <p className="text-[#7a92c1] text-xs">
+                    Trusted by <span className="font-semibold text-[#2d4070]">50 Lakh+</span> job seekers
                   </p>
                 </div>
               </div>
             </div>
-          ))}
-        </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-14 z-10">
-          <div className="max-w-3xl">
-            {/* Pill */}
-            <div className="section-label mb-4">
-              <Sparkles size={12} />
-              1,20,000+ Jobs Updated Daily · 100% Free
-            </div>
+            {/* ── Right column: AI match preview ─────────── */}
+            <div className="relative hidden lg:block">
+              {/* Main panel */}
+              <div className="card shadow-card-lg p-5 relative z-10">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <span className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                      <Zap size={15} />
+                    </span>
+                    <div>
+                      <p className="text-[#0c1a3a] text-sm font-semibold" style={{ fontFamily: "Sora,sans-serif" }}>
+                        AI Matches for you
+                      </p>
+                      <p className="text-[#7a92c1] text-[11px]">Based on your resume</p>
+                    </div>
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-green-600 bg-green-50 px-2.5 py-1 rounded-full">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500" /> Live
+                  </span>
+                </div>
 
-            <style>{`
-              @keyframes countrySlideUp {
-                from { transform: translateY(40px); opacity: 0; }
-                to   { transform: translateY(0);    opacity: 1; }
-              }
-            `}</style>
-            <h1
-              className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[#0c1a3a] leading-[1.1] mb-4"
-              style={{ fontFamily: "Sora, sans-serif" }}
-            >
-              Find Your Dream Job
-              in{" "}
-              <span
-                key={countryIdx}
-                className="text-gradient inline-block"
-                style={{ animation: "countrySlideUp 0.5s cubic-bezier(0.22,1,0.36,1) forwards" }}
-              >
-                {COUNTRIES[countryIdx]}
-              </span>
-            </h1>
+                <div className="space-y-2.5">
+                  {[
+                    { title: "Senior Engineer", co: "Google", salary: "₹45–80L", color: "#4285F4", match: 96 },
+                    { title: "Product Manager", co: "Swiggy", salary: "₹30–55L", color: "#FC8019", match: 92 },
+                    { title: "Data Scientist", co: "Flipkart", salary: "₹25–50L", color: "#2874F0", match: 89 },
+                  ].map((j, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-3 p-3 rounded-xl border border-[#eef3fc] hover:border-primary/30 hover:bg-primary/[0.03] transition-colors"
+                    >
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shrink-0"
+                        style={{ backgroundColor: j.color + "18", color: j.color }}
+                      >
+                        {j.co[0]}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[#0c1a3a] text-sm font-semibold truncate">{j.title}</p>
+                        <p className="text-[#7a92c1] text-xs">{j.co} · {j.salary}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-green-600 text-sm font-bold">{j.match}%</p>
+                        <p className="text-[#a8bcd8] text-[10px]">match</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
 
-            <p className="text-[#2d4070] text-lg mb-7 leading-relaxed max-w-xl">
-              Upload your resume and instantly get matched with jobs that fit
-              your skills & Apply
-            </p>
-
-            {/* Search bar */}
-            <JobSearchBar
-              skillsValue={search}
-              onSkillsChange={setSearch}
-              locationValue={location}
-              onLocationChange={setLocation}
-              onSearch={handleSearch}
-              variant="home"
-            />
-
-            {/* Upload resume CTA */}
-            <button
-              onClick={() => setShowResume(true)}
-              className="inline-flex items-center gap-2 text-sm text-primary-600 font-medium hover:text-primary-500 transition-colors group"
-            >
-              <span className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center group-hover:bg-primary transition-colors">
-                <Sparkles size={13} />
-              </span>
-              Upload resume for instant job matching
-              <ChevronRight size={14} />
-            </button>
-
-            {/* Popular searches */}
-            <div className="flex flex-wrap items-center gap-2 mt-6 text-sm">
-              <span className="text-[#7a92c1]">Trending:</span>
-              {[
-                { label: "React Developer", skills: "React" },
-                { label: "Product Manager", skills: "Product Management" },
-                { label: "Data Scientist", skills: "Python,Machine Learning" },
-                { label: "DevOps Engineer", skills: "Docker,Kubernetes" },
-                { label: "UI Designer", skills: "Figma,UI Design" },
-              ].map(({ label, skills }) => (
-                <Link
-                  key={label}
-                  href={`/jobs?skills=${encodeURIComponent(skills)}`}
-                  className="px-3 py-1.5 bg-white border border-[#e2eaf8] text-[#2d4070] rounded-xl text-xs font-medium hover:border-blue-300 hover:text-blue-600 transition-all"
+                <button
+                  onClick={() => setShowResume(true)}
+                  className="btn-primary w-full mt-4 py-3 rounded-xl text-sm gap-2"
                 >
-                  {label}
-                </Link>
-              ))}
+                  <Sparkles size={15} /> Match my resume
+                </button>
+              </div>
+
+              {/* Floating chip: resume analyzed */}
+              <div className="absolute -top-5 -left-6 card px-4 py-3 animate-float z-20">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-8 h-8 rounded-lg bg-green-50 text-green-600 flex items-center justify-center">
+                    <CheckCircle2 size={16} />
+                  </span>
+                  <div>
+                    <p className="text-[#0c1a3a] text-xs font-semibold">Resume analysed</p>
+                    <p className="text-[#7a92c1] text-[10px]">42 skills detected</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Floating chip: applications */}
+              <div className="absolute -bottom-6 -right-4 card px-4 py-3 z-20">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                    <TrendingUp size={16} />
+                  </span>
+                  <div>
+                    <p className="text-[#0c1a3a] text-xs font-semibold">1,240 hires</p>
+                    <p className="text-[#7a92c1] text-[10px]">this week</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Stats row */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-10">
+          {/* Stats bar */}
+          <div className="card-flat rounded-2xl mt-14 grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-[#eef3fc]">
             {stats.map((stat, i) => (
-              <div key={i} className="card-flat p-4 text-center rounded-2xl">
+              <div key={i} className="p-5 text-center">
                 <div
-                  className="text-2xl font-extrabold text-primary-600 mb-0.5"
+                  className="text-2xl lg:text-3xl font-extrabold text-primary-600 mb-0.5"
                   style={{ fontFamily: "Sora,sans-serif" }}
                 >
                   {stat.value}
