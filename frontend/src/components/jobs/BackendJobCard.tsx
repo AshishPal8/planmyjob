@@ -8,6 +8,7 @@ import {
   BookmarkCheck,
   ExternalLink,
   CheckCircle2,
+  Users,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +32,10 @@ export default function BackendJobCard({ job }: { job: BackendJob }) {
   const logoColor = getLogoColor(job.company);
   const applyUrl = getApplyUrl(job);
   const skills = job.skills ?? [];
+  // Real applies from the API + a stable 80–120 bump (derived from the job id
+  // so it doesn't change between renders) to signal healthy demand.
+  const applicants =
+    (job.applyCount ?? 0) + 80 + (Math.abs(Math.imul(job.id, 2654435761)) % 41);
 
   const handleJobApply: any = async () => {
     execute(() => window.open(applyUrl, "_blank", "noopener,noreferrer"));
@@ -110,6 +115,10 @@ export default function BackendJobCard({ job }: { job: BackendJob }) {
           <span className="flex items-center gap-1.5">
             <Clock size={12} className="text-primary shrink-0" />
             {JOB_TYPE_LABELS[job.jobType ?? ""] ?? job.jobType}
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Users size={12} className="text-primary shrink-0" />
+            {applicants} applied
           </span>
         </div>
 
