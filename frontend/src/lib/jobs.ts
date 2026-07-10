@@ -14,6 +14,7 @@ export interface BackendJob {
   matchedSkills: string[];
   isSaved: number;
   isApplied: number;
+  applyCount?: number;
 }
 
 export interface FullJob {
