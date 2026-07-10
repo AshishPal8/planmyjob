@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Loader2, X } from "lucide-react";
 import api from "@/lib/axios";
 
@@ -19,6 +19,12 @@ interface Props {
   icon?: React.ReactNode;
   className?: string;
   minChars?: number;
+  /**
+   * multiple = comma-separated multi-select (e.g. skills). Picking a suggestion
+   * appends it and lets you keep typing. When false (e.g. city) picking a
+   * suggestion replaces the whole value — one value only.
+   */
+  multiple?: boolean;
 }
 
 export default function AutocompleteInput({
@@ -31,6 +37,7 @@ export default function AutocompleteInput({
   icon,
   className = "",
   minChars = 2,
+  multiple = true,
 }: Props) {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [open, setOpen] = useState(false);
@@ -52,10 +59,32 @@ export default function AutocompleteInput({
   }, []);
 
   // the term currently being typed is everything after the last comma
+  // (or the whole value in single-select mode)
   const getCurrentTerm = (val: string) => {
+    if (!multiple) return val.trim();
     const lastComma = val.lastIndexOf(",");
     return lastComma >= 0 ? val.slice(lastComma + 1).trim() : val.trim();
   };
+
+  // values already confirmed (multi-select) — used to hide duplicates
+  const confirmedTerms = useMemo(() => {
+    if (!multiple) return [] as string[];
+    const lastComma = value.lastIndexOf(",");
+    const head = lastComma >= 0 ? value.slice(0, lastComma) : "";
+    return head
+      .split(",")
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean);
+  }, [value, multiple]);
+
+  // never show a suggestion the user has already picked
+  const visibleSuggestions = useMemo(
+    () =>
+      suggestions.filter(
+        (s) => !confirmedTerms.includes(s.label.toLowerCase()),
+      ),
+    [suggestions, confirmedTerms],
+  );
 
   const fetchSuggestions = useCallback(
     async (q: string) => {
@@ -73,7 +102,7 @@ export default function AutocompleteInput({
             id: item.id,
             label: buildLabel(item),
             sublabel: buildSublabel ? buildSublabel(item) : undefined,
-          }))
+          })),
         );
         setOpen(true);
         setActiveIdx(-1);
@@ -83,7 +112,7 @@ export default function AutocompleteInput({
         setLoading(false);
       }
     },
-    [endpoint, buildLabel, buildSublabel, minChars]
+    [endpoint, buildLabel, buildSublabel, minChars],
   );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -94,14 +123,26 @@ export default function AutocompleteInput({
     debounceRef.current = setTimeout(() => fetchSuggestions(term), 300);
   };
 
-  // append selected label after the already-confirmed terms and add ", " so
-  // the user can immediately type the next value (Naukri-style multi-select)
   const handleSelect = (s: Suggestion) => {
+    if (!multiple) {
+      // single-select: replace the whole value with the chosen label
+      onChange(s.label);
+      setOpen(false);
+      setSuggestions([]);
+      inputRef.current?.blur();
+      return;
+    }
+
+    // multi-select: append after the already-confirmed terms, skipping dupes
     const lastComma = value.lastIndexOf(",");
-    const base =
-      lastComma >= 0 ? value.slice(0, lastComma + 1).trimEnd() : "";
-    const newValue = base ? `${base} ${s.label}, ` : `${s.label}, `;
-    onChange(newValue);
+    const base = lastComma >= 0 ? value.slice(0, lastComma + 1).trimEnd() : "";
+
+    // duplicate → just drop the half-typed term, keep confirmed ones
+    if (confirmedTerms.includes(s.label.toLowerCase())) {
+      onChange(base ? `${base} ` : "");
+    } else {
+      onChange(base ? `${base} ${s.label}, ` : `${s.label}, `);
+    }
     setOpen(false);
     setSuggestions([]);
     setTimeout(() => inputRef.current?.focus(), 0);
@@ -110,14 +151,19 @@ export default function AutocompleteInput({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      if (!open && suggestions.length > 0) setOpen(true);
-      setActiveIdx((i) => Math.min(i + 1, suggestions.length - 1));
+      if (!open && visibleSuggestions.length > 0) setOpen(true);
+      setActiveIdx((i) => Math.min(i + 1, visibleSuggestions.length - 1));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setActiveIdx((i) => Math.max(i - 1, -1));
-    } else if (e.key === "Enter" && open && activeIdx >= 0) {
-      e.preventDefault();
-      handleSelect(suggestions[activeIdx]);
+    } else if (e.key === "Enter") {
+      // Enter picks the highlighted item, or the FIRST one if nothing is
+      // highlighted yet — no need to press the down arrow first.
+      if (open && visibleSuggestions.length > 0) {
+        e.preventDefault();
+        handleSelect(visibleSuggestions[activeIdx >= 0 ? activeIdx : 0]);
+      }
+      // otherwise let the surrounding form submit (run the search)
     } else if (e.key === "Escape") {
       setOpen(false);
     }
@@ -129,8 +175,6 @@ export default function AutocompleteInput({
     setOpen(false);
   };
 
-  const currentTerm = getCurrentTerm(value);
-
   return (
     <div ref={containerRef} className={`relative flex-1 ${className}`}>
       <div className="flex items-center gap-2.5 px-3 py-1">
@@ -141,16 +185,13 @@ export default function AutocompleteInput({
           value={value}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          onFocus={() => suggestions.length > 0 && setOpen(true)}
+          onFocus={() => visibleSuggestions.length > 0 && setOpen(true)}
           placeholder={placeholder}
           className="bg-transparent w-full text-[#0c1a3a] placeholder-[#a8bcd8] outline-none text-sm"
           autoComplete="off"
         />
         {loading && (
-          <Loader2
-            size={13}
-            className="text-primary animate-spin shrink-0"
-          />
+          <Loader2 size={13} className="text-primary animate-spin shrink-0" />
         )}
         {value && !loading && (
           <button
@@ -163,10 +204,10 @@ export default function AutocompleteInput({
         )}
       </div>
 
-      {open && suggestions.length > 0 && (
+      {open && visibleSuggestions.length > 0 && (
         <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-[#e2eaf8] rounded-2xl shadow-xl z-50 overflow-hidden">
           <ul className="max-h-52 overflow-y-auto py-1">
-            {suggestions.map((s, i) => (
+            {visibleSuggestions.map((s, i) => (
               <li key={s.id}>
                 <button
                   type="button"
@@ -174,8 +215,9 @@ export default function AutocompleteInput({
                     e.preventDefault();
                     handleSelect(s);
                   }}
+                  onMouseEnter={() => setActiveIdx(i)}
                   className={`w-full text-left px-4 py-2.5 text-sm flex items-center justify-between gap-2 transition-colors ${
-                    i === activeIdx
+                    i === (activeIdx >= 0 ? activeIdx : 0)
                       ? "bg-primary/10 text-primary"
                       : "text-[#2d4070] hover:bg-[#f8fbff]"
                   }`}
@@ -190,15 +232,14 @@ export default function AutocompleteInput({
               </li>
             ))}
           </ul>
-          {currentTerm && (
-            <div className="px-4 py-2 border-t border-[#f0f5ff] text-xs text-[#7a92c1]">
-              Press{" "}
-              <kbd className="bg-[#f0f5ff] px-1.5 py-0.5 rounded font-mono">
-                Enter
-              </kbd>{" "}
-              to search with &ldquo;{currentTerm}&rdquo;
-            </div>
-          )}
+          <div className="px-4 py-2 border-t border-[#f0f5ff] text-xs text-[#7a92c1]">
+            Press{" "}
+            <kbd className="bg-[#f0f5ff] px-1.5 py-0.5 rounded font-mono">
+              Enter
+            </kbd>{" "}
+            to select &ldquo;
+            {visibleSuggestions[activeIdx >= 0 ? activeIdx : 0].label}&rdquo;
+          </div>
         </div>
       )}
     </div>
