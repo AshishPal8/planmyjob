@@ -4,4 +4,5 @@ export const envConfig = {
   graphqlUrl: process.env.NEXT_PUBLIC_GRAPHQL_URL!,
   frontendUrl: process.env.NEXT_PUBLIC_SITE_URL!,
   authCookieName: "auth_token",
+  gaMeasurementId: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID,
 };

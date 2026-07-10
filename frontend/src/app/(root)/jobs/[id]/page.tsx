@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import {
   MapPin,
   Clock,
-  ArrowLeft,
   Calendar,
   Briefcase,
   IndianRupee,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import ApplyButton from "@/components/jobs/ApplyButton";
+import BackToJobsLink from "@/components/jobs/BackToJobsLink";
+import JobViewTracker from "@/components/jobs/JobViewTracker";
 import {
   type FullJob,
   JOB_TYPE_LABELS,
@@ -152,14 +152,11 @@ export default async function JobDetailPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
+      <JobViewTracker jobId={job.id} title={job.title} company={job.company} />
+
       <div className="min-h-screen bg-[#f0f5ff]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-2">
-          <Link
-            href="/jobs"
-            className="inline-flex items-center gap-1.5 text-[#7a92c1] hover:text-blue-600 text-sm transition-colors"
-          >
-            <ArrowLeft size={14} /> Back to Jobs
-          </Link>
+          <BackToJobsLink />
         </div>
 
         <div className="sticky top-16 z-30 bg-white border-b border-[#e2eaf8] shadow-sm">

@@ -5,6 +5,7 @@ import type { VariantProps } from "class-variance-authority";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { useAuthAction } from "@/hooks/use-auth-action";
 import api from "@/lib/axios";
+import { trackEvent } from "@/lib/analytics";
 
 export default function ApplyButton({
   applyUrl,
@@ -30,6 +31,7 @@ export default function ApplyButton({
     execute(() => window.open(applyUrl, "_blank", "noopener,noreferrer"));
 
     setApplied(true);
+    trackEvent("job_apply", { job_id: jobId });
     await api.post(`/jobs/apply/${jobId}`);
   };
 

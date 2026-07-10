@@ -13,6 +13,7 @@ import { useAuthStore, type User, type WorkExperience, type Education } from "@/
 import { Button } from "@/components/ui/button";
 import api from "@/lib/axios";
 import { type BackendJob, formatPostedDate, getLogoColor } from "@/lib/jobs";
+import { trackEvent } from "@/lib/analytics";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -198,8 +199,16 @@ export default function ProfilePage() {
         ...patch,
       };
       await api.put("/user/profile", payload);
-      setUser({ ...user, ...patch });
+      const updatedUser = { ...user, ...patch };
+      setUser(updatedUser);
       setModal(null);
+
+      const prevCompletion = user.profileScore ?? profileCompletion(user);
+      const newCompletion = profileCompletion(updatedUser);
+      if (prevCompletion < 100 && newCompletion >= 100) {
+        trackEvent("profile_completed");
+      }
+
       return true;
     } catch {
       toast.error("Failed to save. Please try again.");

@@ -10,6 +10,7 @@ import { categories } from "@/data";
 import { Button } from "@/components/ui/button";
 import JobSearchBar from "@/components/ui/JobSearchBar";
 import api from "@/lib/axios";
+import { trackEvent } from "@/lib/analytics";
 
 const JOB_TYPES = [
   "Full-time",
@@ -55,6 +56,33 @@ const CATEGORY_KEYWORDS: Record<string, string[]> = {
 };
 
 const PAGE_SIZE = 30;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+// Module-level cache so results survive navigating to a job detail page and back
+// (the component remounts, but this cache lives as long as the JS bundle is loaded).
+type JobsCacheEntry = {
+  jobs: BackendJob[];
+  total: number;
+  page: number;
+  timestamp: number;
+};
+const jobsCache = new Map<string, JobsCacheEntry>();
+
+function jobsCacheKey(skills: string, loc: string, title: string) {
+  return `${skills}|${loc}|${title}`;
+}
+
+const JOBS_SCROLL_KEY = "jobs-scroll-position";
+
+// Track whether the current mount was reached via the browser back/forward
+// button (popstate) rather than a fresh link click, so we only restore
+// scroll position on the former.
+let cameFromPopState = false;
+if (typeof window !== "undefined") {
+  window.addEventListener("popstate", () => {
+    cameFromPopState = true;
+  });
+}
 
 function JobsContent() {
   const searchParams = useSearchParams();
@@ -84,8 +112,17 @@ function JobsContent() {
 
   const callApi = useCallback(async (skills: string, loc: string, title = "", page = 1) => {
     searchParamsRef.current = { skills, loc, title };
+    const cacheKey = jobsCacheKey(skills, loc, title);
 
     if (page === 1) {
+      const cached = jobsCache.get(cacheKey);
+      if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+        setAllJobs(cached.jobs);
+        setTotalFromApi(cached.total);
+        setCurrentPage(cached.page);
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       setCurrentPage(1);
     } else {
@@ -111,8 +148,13 @@ function JobsContent() {
       setTotalFromApi(total);
       if (page === 1) {
         setAllJobs(jobs);
+        jobsCache.set(cacheKey, { jobs, total, page: 1, timestamp: Date.now() });
       } else {
-        setAllJobs((prev) => [...prev, ...jobs]);
+        setAllJobs((prev) => {
+          const merged = [...prev, ...jobs];
+          jobsCache.set(cacheKey, { jobs: merged, total, page, timestamp: Date.now() });
+          return merged;
+        });
         setCurrentPage(page);
       }
     } catch {
@@ -141,6 +183,42 @@ function JobsContent() {
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [hasMore, loadingMore, currentPage, callApi]);
+
+  // Continuously remember scroll position so we can restore it on back navigation
+  useEffect(() => {
+    const onScroll = () => {
+      sessionStorage.setItem(JOBS_SCROLL_KEY, String(window.scrollY));
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Restore scroll position once the (cached) jobs are back on screen, but only
+  // when we arrived here via the browser back button — a fresh visit should
+  // still start at the top. Next.js's own router also tries to manage scroll
+  // on back navigation, and can reset us to the top a frame or two after this
+  // effect runs, so we keep re-applying the saved position for a short window
+  // to win that race instead of just setting it once.
+  useEffect(() => {
+    if (loading) return;
+    if (!cameFromPopState) return;
+    cameFromPopState = false;
+
+    const saved = sessionStorage.getItem(JOBS_SCROLL_KEY);
+    if (!saved) return;
+    const y = parseInt(saved, 10);
+    if (!y) return;
+
+    let frame = 0;
+    let rafId: number;
+    const pin = () => {
+      window.scrollTo(0, y);
+      frame += 1;
+      if (frame < 15) rafId = requestAnimationFrame(pin);
+    };
+    rafId = requestAnimationFrame(pin);
+    return () => cancelAnimationFrame(rafId);
+  }, [loading]);
 
   useEffect(() => {
     const skills = searchParams.get("skills") || "";
@@ -190,6 +268,7 @@ function JobsContent() {
   const handleSearch = () => {
     setAppliedSkills(skillsInput);
     setAppliedLocation(location);
+    trackEvent("job_search", { skills: skillsInput, location });
     callApi(skillsInput, location);
   };
 

@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthModalTrigger } from "@/components/auth/AuthModalTrigger";
 import LoginModal from "@/modals/login-modal";
 import { Toaster } from "sonner";
+import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 
 export const metadata: Metadata = {
   title: "FindurJob — Find Your Dream Career in India",
@@ -39,6 +40,7 @@ export default function RootLayout({
         <LoginModal />
         <Toaster position="top-center" richColors />
         {children}
+        <GoogleAnalytics />
       </body>
     </html>
   );
