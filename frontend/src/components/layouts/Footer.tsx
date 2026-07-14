@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Briefcase, MapPin, Mail, Phone } from "lucide-react";
+import { MapPin, Mail } from "lucide-react";
+import Logo from "./Logo";
 
 const columns = [
   {
@@ -37,15 +38,7 @@ export default function Footer() {
           {/* Brand col */}
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-5">
-              <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center">
-                <Briefcase size={15} className="text-white" />
-              </div>
-              <span
-                className="text-xl font-bold"
-                style={{ fontFamily: "Sora,sans-serif" }}
-              >
-                Findur<span className="text-primary">Job</span>
-              </span>
+              <Logo />
             </Link>
             <p className="text-white/50 text-sm leading-relaxed mb-5 max-w-xs">
               India&apos;s most trusted job search platform. Connecting
@@ -55,7 +48,7 @@ export default function Footer() {
               <div className="flex items-center gap-2">
                 <Mail size={13} /> info@findurjob.in
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <MapPin size={13} /> Noida, India
               </div>
@@ -90,7 +83,8 @@ export default function Footer() {
         <hr className="border-white/10 mb-6" />
         <div className="flex flex-col md:flex-row items-center justify-between gap-3">
           <p className="text-white/30 text-sm">
-            © {new Date().getFullYear()} FindurJob Technologies Pvt. Ltd. All rights reserved.
+            © {new Date().getFullYear()} FindurJob Technologies Pvt. Ltd. All
+            rights reserved.
           </p>
           <div className="flex gap-5">
             {[

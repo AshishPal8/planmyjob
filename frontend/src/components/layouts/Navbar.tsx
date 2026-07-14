@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { useLoginModal } from "@/store/useLoginModal";
 import { useAuthStore } from "@/store/auth-store";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import Logo from "./Logo";
 
 export default function Navbar({
   transparent = false,
@@ -77,24 +78,17 @@ export default function Navbar({
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isTransparent
-        ? "bg-transparent"
-        : "bg-white/95 backdrop-blur-xl border-b border-[#e2eaf8] shadow-sm"
-        }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isTransparent
+          ? "bg-transparent"
+          : "bg-white/95 backdrop-blur-xl border-b border-[#e2eaf8] shadow-sm"
+      }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
-            <div className="w-8 h-8 bg-linear-to-br from-primary to-primary/90 rounded-xl flex items-center justify-center shadow-md">
-              <Briefcase size={15} className="text-white" />
-            </div>
-            <span
-              className="font-display font-bold text-xl text-[#0c1a3a]"
-              style={{ fontFamily: "Sora,sans-serif" }}
-            >
-              Findur<span className="text-primary">Job</span>
-            </span>
+            <Logo />
           </Link>
 
           {/* Desktop nav */}
@@ -130,30 +124,30 @@ export default function Navbar({
                   <Bell size={16} />
                 </Link> */}
 
-                 {/* Mobile hamburger */}
-                  <button
-                    onClick={() => setOpen(!open)}
-                    className="lg:hidden text-[#2d4070] p-2 rounded-lg hover:bg-primary/10"
-                  >
-                    {open ? <X size={20} /> : <Menu size={20} />}
-                  </button>
+                {/* Mobile hamburger */}
+                <button
+                  onClick={() => setOpen(!open)}
+                  className="lg:hidden text-[#2d4070] p-2 rounded-lg hover:bg-primary/10"
+                >
+                  {open ? <X size={20} /> : <Menu size={20} />}
+                </button>
 
                 <DropdownMenu>
                   <DropdownMenuTrigger className="flex items-center gap-2.5 px-3 py-1.5 bg-[#f8fbff] border border-[#e2eaf8] rounded-2xl hover:border-blue-300 hover:shadow-sm transition-all focus:outline-none">
                     {user.profilePicture ? (
-                        <Avatar className="w-8 h-8">
-                          <AvatarImage
-                            src={user?.profilePicture || ""}
-                            alt={user?.name || "Profile"}
-                          />
-                        </Avatar>
-                      ) : (
-                        <Avatar className="w-8 h-8">
-                          <AvatarFallback className="text-xs bg-primary rounded-full flex items-center justify-center text-white font-bold">
-                            {user?.name?.[0]?.toUpperCase() || "A"}
-                          </AvatarFallback>
-                        </Avatar>
-                      )}
+                      <Avatar className="w-8 h-8">
+                        <AvatarImage
+                          src={user?.profilePicture || ""}
+                          alt={user?.name || "Profile"}
+                        />
+                      </Avatar>
+                    ) : (
+                      <Avatar className="w-8 h-8">
+                        <AvatarFallback className="text-xs bg-primary rounded-full flex items-center justify-center text-white font-bold">
+                          {user?.name?.[0]?.toUpperCase() || "A"}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
                     <div className="hidden lg:block text-left">
                       <p className="text-xs font-bold text-black leading-tight">
                         {user.name}
@@ -260,8 +254,6 @@ export default function Navbar({
               </>
             )}
           </div>
-
-         
         </div>
       </div>
 
