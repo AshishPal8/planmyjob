@@ -29,7 +29,9 @@ export function setAuthCookie(res: Response, token: string): void {
     secure: process.env.NODE_ENV === "production",
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     domain:
-      process.env.NODE_ENV === "production" ? ".ashishpal.dev" : "localhost",
+      process.env.NODE_ENV === "production"
+        ? envConfig.cookieDomain
+        : "localhost",
     maxAge: 30 * 24 * 60 * 60 * 1000,
     path: "/",
   });
@@ -41,7 +43,9 @@ export function clearAuthCookie(res: Response): void {
     secure: process.env.NODE_ENV === "production",
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     domain:
-      process.env.NODE_ENV === "production" ? ".ashishpal.dev" : "localhost",
+      process.env.NODE_ENV === "production"
+        ? envConfig.cookieDomain
+        : "localhost",
     path: "/",
   });
 }
