@@ -74,7 +74,7 @@ app.use(globalErrorHandler);
 (async () => {
   await connectDB();
 
-  // startAllCrons();
+  startAllCrons();
 
   app.listen(PORT, () => {
     console.log(`🚀 Server is running on port ${PORT}`);

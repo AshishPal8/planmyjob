@@ -6,3 +6,4 @@ export * from "./skill.schema";
 export * from "./city.schema";
 export * from "./saved_job.schema";
 export * from "./job_application.schema";
+export * from "./company_flag_master.schema";
