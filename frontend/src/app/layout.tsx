@@ -7,7 +7,7 @@ import { Toaster } from "sonner";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 
 export const metadata: Metadata = {
-  title: "FindurJob — Find Your Dream Career in India",
+  title: "PlanurJob — Find Your Dream Career in India",
   description:
     "Discover thousands of jobs from top companies. Upload your resume and get matched instantly.",
   keywords: "jobs, careers, hiring, employment, job search india",
