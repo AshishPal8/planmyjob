@@ -180,6 +180,12 @@ export const getJobsService = async (
     );
   }
 
+  // Join saved/applied status in the same round trip instead of querying for
+  // it afterwards — with a remote DB, every extra round trip costs more than
+  // the query itself for a table this size. -1 is a safe "no user" sentinel
+  // since real user ids start at 1, so the join is a no-op when logged out.
+  const effectiveUserId = userId ?? -1;
+
   const candidates = await db
     .select({
       id: jobs.id,
@@ -195,8 +201,21 @@ export const getJobsService = async (
       postedAt: jobs.postedAt,
       applyCount: jobs.applyCount,
       description: jobs.description,
+      isSaved: sql<boolean>`${savedJobs.id} IS NOT NULL`,
+      isApplied: sql<boolean>`${jobApplications.id} IS NOT NULL`,
     })
     .from(jobs)
+    .leftJoin(
+      savedJobs,
+      and(eq(savedJobs.jobId, jobs.id), eq(savedJobs.userId, effectiveUserId)),
+    )
+    .leftJoin(
+      jobApplications,
+      and(
+        eq(jobApplications.jobId, jobs.id),
+        eq(jobApplications.userId, effectiveUserId),
+      ),
+    )
     .where(sql.join(conditions, sql` AND `))
     .limit(300);
 
@@ -254,41 +273,10 @@ export const getJobsService = async (
 
   const pageJobs = ranked.slice(offset, offset + pageSize);
 
-  if (pageJobs.length === 0) {
-    return { total: ranked.length, page, pageSize, jobs: [] };
-  }
-
-  // fetch user-specific flags if authenticated (applyCount already in job row)
-  let savedSet = new Set<number>();
-  let appliedSet = new Set<number>();
-
-  if (userId) {
-    const jobIds = pageJobs.map((j) => j.id);
-    const [savedRows, appliedRows] = await Promise.all([
-      db
-        .select({ jobId: savedJobs.jobId })
-        .from(savedJobs)
-        .where(
-          and(eq(savedJobs.userId, userId), inArray(savedJobs.jobId, jobIds)),
-        ),
-      db
-        .select({ jobId: jobApplications.jobId })
-        .from(jobApplications)
-        .where(
-          and(
-            eq(jobApplications.userId, userId),
-            inArray(jobApplications.jobId, jobIds),
-          ),
-        ),
-    ]);
-    savedSet = new Set(savedRows.map((r) => r.jobId));
-    appliedSet = new Set(appliedRows.map((r) => r.jobId));
-  }
-
   const enrichedJobs = pageJobs.map((job) => ({
     ...job,
-    isSaved: savedSet.has(job.id) ? 1 : 0,
-    isApplied: appliedSet.has(job.id) ? 1 : 0,
+    isSaved: job.isSaved ? 1 : 0,
+    isApplied: job.isApplied ? 1 : 0,
   }));
 
   return { total: ranked.length, page, pageSize, jobs: enrichedJobs };
@@ -304,9 +292,28 @@ export const getJobSlugsForSitemapService = async () => {
 };
 
 export const getJobBySlugService = async (slug: string, userId?: number) => {
+  // -1 is a safe "no user" sentinel since real user ids start at 1 — keeps
+  // this a single round trip instead of the job query plus two more.
+  const effectiveUserId = userId ?? -1;
+
   const rows = await db
-    .select()
+    .select({
+      job: jobs,
+      isSaved: sql<boolean>`${savedJobs.id} IS NOT NULL`,
+      isApplied: sql<boolean>`${jobApplications.id} IS NOT NULL`,
+    })
     .from(jobs)
+    .leftJoin(
+      savedJobs,
+      and(eq(savedJobs.jobId, jobs.id), eq(savedJobs.userId, effectiveUserId)),
+    )
+    .leftJoin(
+      jobApplications,
+      and(
+        eq(jobApplications.jobId, jobs.id),
+        eq(jobApplications.userId, effectiveUserId),
+      ),
+    )
     .where(
       and(
         eq(jobs.slug, slug),
@@ -316,33 +323,13 @@ export const getJobBySlugService = async (slug: string, userId?: number) => {
     )
     .limit(1);
 
-  const job = rows[0];
-  if (!job) return null;
-
-  if (!userId) return { ...job, isSaved: 0, isApplied: 0 };
-
-  const [savedRows, appliedRows] = await Promise.all([
-    db
-      .select({ id: savedJobs.id })
-      .from(savedJobs)
-      .where(and(eq(savedJobs.userId, userId), eq(savedJobs.jobId, job.id)))
-      .limit(1),
-    db
-      .select({ id: jobApplications.id })
-      .from(jobApplications)
-      .where(
-        and(
-          eq(jobApplications.userId, userId),
-          eq(jobApplications.jobId, job.id),
-        ),
-      )
-      .limit(1),
-  ]);
+  const row = rows[0];
+  if (!row) return null;
 
   return {
-    ...job,
-    isSaved: savedRows.length > 0 ? 1 : 0,
-    isApplied: appliedRows.length > 0 ? 1 : 0,
+    ...row.job,
+    isSaved: row.isSaved ? 1 : 0,
+    isApplied: row.isApplied ? 1 : 0,
   };
 };
 
