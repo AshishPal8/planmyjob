@@ -68,7 +68,6 @@ app.use("/api/jobs", jobsRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/search", searchLimiter, searchRoutes);
 
-// Global Error Handler
 app.use(globalErrorHandler);
 
 (async () => {
