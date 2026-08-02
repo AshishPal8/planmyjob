@@ -69,8 +69,6 @@ export const fetchJSearchJobs = async (): Promise<NormalizedJob[]> => {
   url.searchParams.set("query", "software developer engineer India");
   url.searchParams.set("num_pages", "1"); // each extra page beyond 1 typically costs its own quota unit — leave at 1
   url.searchParams.set("page", "1");
-  // TODO: confirm your RapidAPI JSearch plan's actual max page_size and raise
-  // this to match — 10 is a conservative placeholder, not a verified ceiling.
   url.searchParams.set("page_size", "10");
   // broadened from "today" to "week" — widens the pool of matchable postings
   // at zero extra quota cost, since page_size/date range don't affect the
