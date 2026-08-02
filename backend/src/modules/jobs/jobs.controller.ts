@@ -44,7 +44,13 @@ export const getJobBySlug = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const job = await getJobBySlugService(req.params.slug, req.user?.id);
+    const slug = req.params.slug;
+    if (typeof slug !== "string") {
+      res.status(400).json({ success: false, message: "Invalid job slug" });
+      return;
+    }
+
+    const job = await getJobBySlugService(slug, req.user?.id);
     if (!job) {
       res.status(404).json({ success: false, message: "Job not found" });
       return;

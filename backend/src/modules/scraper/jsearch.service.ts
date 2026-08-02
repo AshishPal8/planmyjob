@@ -6,8 +6,6 @@ import {
   type JobType,
 } from "./scraper.schema";
 
-const JSEARCH_BASE = "https://jsearch.p.rapidapi.com/search";
-
 const normalizeJobType = (type?: string | null) => {
   const cleaned = type?.toLowerCase().replace(/[\s_-]/g, "") ?? "";
   const map: Record<string, string> = {
@@ -69,10 +67,15 @@ export const fetchJSearchJobs = async (): Promise<NormalizedJob[]> => {
 
   const url = new URL("https://jsearch.p.rapidapi.com/search-v2");
   url.searchParams.set("query", "software developer engineer India");
-  url.searchParams.set("num_pages", "1");
+  url.searchParams.set("num_pages", "1"); // each extra page beyond 1 typically costs its own quota unit — leave at 1
   url.searchParams.set("page", "1");
-  url.searchParams.set("page_size", "2");
-  url.searchParams.set("date_posted", "today");
+  // TODO: confirm your RapidAPI JSearch plan's actual max page_size and raise
+  // this to match — 10 is a conservative placeholder, not a verified ceiling.
+  url.searchParams.set("page_size", "10");
+  // broadened from "today" to "week" — widens the pool of matchable postings
+  // at zero extra quota cost, since page_size/date range don't affect the
+  // per-call cost, only num_pages does
+  url.searchParams.set("date_posted", "week");
   url.searchParams.set("country", "in");
 
   const res = await fetch(url.toString(), {
