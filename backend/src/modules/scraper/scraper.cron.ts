@@ -44,8 +44,6 @@ export const startScraperCron = () => {
 
         await saveJobsService(allJobs);
 
-        // run cleanup once/day, pinned to the 6pm run specifically, rather
-        // than every run
         if (getIstHour() === 18) {
           await deactivateOldJobs(30);
         }
