@@ -18,8 +18,6 @@ const getIstHour = () =>
 
 export const startScraperCron = () => {
   // 5am/9am/2pm/6pm IST — Remotive's own API notice caps usage at "max 4
-  // times a day" with excessive requests getting blocked, so this is the
-  // ceiling, not an arbitrary choice.
   cron.schedule(
     "0 5,9,14,18 * * *",
     async () => {
@@ -58,7 +56,5 @@ export const startScraperCron = () => {
     { timezone: IST_TIMEZONE },
   );
 
-  console.log(
-    "Scraper cron registered — runs at 5AM, 9AM, 2PM, 6PM IST daily",
-  );
+  console.log("Scraper cron registered — runs at 5AM, 9AM, 2PM, 6PM IST daily");
 };
