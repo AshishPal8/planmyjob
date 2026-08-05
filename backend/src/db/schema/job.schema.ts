@@ -22,6 +22,7 @@ export const jobTypeEnum = pgEnum("job_type", [
 export const jobSourceEnum = pgEnum("job_source", [
   "remotive",
   "jsearch",
+  "remoteok",
   "manual",
 ]);
 

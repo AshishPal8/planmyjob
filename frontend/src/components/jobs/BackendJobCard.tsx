@@ -40,15 +40,20 @@ export default function BackendJobCard({ job }: { job: BackendJob }) {
   const handleJobApply: any = async () => {
     execute(() => window.open(applyUrl, "_blank", "noopener,noreferrer"));
 
-    trackEvent("job_apply", { job_id: job.id, job_title: job.title, company: job.company });
+    trackEvent("job_apply", {
+      job_id: job.id,
+      job_title: job.title,
+      company: job.company,
+    });
     await api.post(`/jobs/apply/${job.id}`);
-  }
+  };
 
   const handleSaveToggle = () => {
     execute(async () => {
       setSaved((prev) => {
         const next = !prev;
-        if (next) trackEvent("save_job", { job_id: job.id, job_title: job.title });
+        if (next)
+          trackEvent("save_job", { job_id: job.id, job_title: job.title });
         return next;
       });
       await api.post(`/jobs/save/${job.id}`);
@@ -72,14 +77,25 @@ export default function BackendJobCard({ job }: { job: BackendJob }) {
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-start gap-3 min-w-0 flex-1">
             <div
-              className="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-lg shrink-0 border"
+              className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border overflow-hidden"
               style={{
                 backgroundColor: logoColor + "14",
                 color: logoColor,
                 borderColor: logoColor + "28",
               }}
             >
-              {job.company[0]?.toUpperCase()}
+              {job.companyLogo ? (
+                <img
+                  src={job.companyLogo}
+                  alt={job.company}
+                  className="w-full h-full object-cover"
+                  // onError={() => setLogoError(true)}
+                />
+              ) : (
+                <span className="font-bold text-lg">
+                  {job.company?.[0]?.toUpperCase()}
+                </span>
+              )}
             </div>
             <div className="min-w-0 flex-1">
               <h3
@@ -89,7 +105,10 @@ export default function BackendJobCard({ job }: { job: BackendJob }) {
               >
                 {job.title}
               </h3>
-              <p title={job.company} className="text-[#7a92c1] text-sm truncate">
+              <p
+                title={job.company}
+                className="text-[#7a92c1] text-sm truncate"
+              >
                 {job.company}
               </p>
             </div>
