@@ -1,6 +1,7 @@
 import cron from "node-cron";
 import { fetchRemotiveJobs } from "./remotive.service";
 import { fetchJSearchJobs } from "./jsearch.service";
+import { fetchRemoteOkJobs } from "./remoteok.service";
 import { saveJobsService, deactivateOldJobs } from "../jobs/jobs.service";
 import { isFlagEnabled } from "../flags/flags.service";
 import { CompanyMasterFlags } from "../flags/flags.constant";
@@ -20,6 +21,7 @@ export const startScraperCron = () => {
   // 5am/9am/2pm/6pm IST — Remotive's own API notice caps usage at "max 4
   cron.schedule(
     "0 5,9,14,18 * * *",
+    // "*/2 * * * *", // testing at every 2 min
     async () => {
       const enabled = await isFlagEnabled(CompanyMasterFlags.START_JOB_CRON);
       if (!enabled) {
@@ -32,14 +34,16 @@ export const startScraperCron = () => {
       console.log("Scraper cron started:", new Date().toISOString());
 
       try {
-        const [remotiveJobs, jsearchJobs] = await Promise.allSettled([
-          fetchRemotiveJobs(),
+        const [jsearchJobs, remoteOkJobs] = await Promise.allSettled([
+          // fetchRemotiveJobs(),
           fetchJSearchJobs(),
+          fetchRemoteOkJobs(),
         ]);
 
         const allJobs = [
-          ...(remotiveJobs.status === "fulfilled" ? remotiveJobs.value : []),
+          // ...(remotiveJobs.status === "fulfilled" ? remotiveJobs.value : []),
           ...(jsearchJobs.status === "fulfilled" ? jsearchJobs.value : []),
+          ...(remoteOkJobs.status === "fulfilled" ? remoteOkJobs.value : []),
         ];
 
         await saveJobsService(allJobs);

@@ -1,12 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import {
-  MapPin,
-  Clock,
-  Calendar,
-  Briefcase,
-  IndianRupee,
-} from "lucide-react";
+import { MapPin, Clock, Calendar, Briefcase, IndianRupee } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import ApplyButton from "@/components/jobs/ApplyButton";
 import BackToJobsLink from "@/components/jobs/BackToJobsLink";
@@ -164,14 +158,25 @@ export default async function JobDetailPage({ params }: Props) {
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 <div
-                  className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center font-bold text-xl shrink-0 border"
+                  className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border overflow-hidden"
                   style={{
                     backgroundColor: logoColor + "14",
                     color: logoColor,
                     borderColor: logoColor + "28",
                   }}
                 >
-                  {job.company[0]?.toUpperCase()}
+                  {job.companyLogo ? (
+                    <img
+                      src={job.companyLogo}
+                      alt={job.company}
+                      className="w-full h-full object-cover"
+                      // onError={() => setLogoError(true)}
+                    />
+                  ) : (
+                    <span className="font-bold text-lg">
+                      {job.company?.[0]?.toUpperCase()}
+                    </span>
+                  )}
                 </div>
 
                 <div className="min-w-0">

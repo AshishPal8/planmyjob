@@ -62,11 +62,34 @@ const normalizeJob = (job: JSearchJob): NormalizedJob => ({
     : new Date(),
 });
 
+// Rotated one-per-run instead of all queried every run — same total monthly
+// call count as a single fixed query, but covers the full category spread
+// over the course of a week instead of hammering "software engineer" only.
+const QUERY_ROTATION = [
+  "software engineer India",
+  "data analyst India",
+  "frontend developer India",
+  "backend developer India",
+  "AI ML engineer India",
+  "devops engineer India",
+] as const;
+
+// module-level counter — resets to 0 on process restart, which just means
+// the rotation restarts from the top; harmless.
+let rotationIndex = 0;
+
+const nextQuery = (): string => {
+  const query = QUERY_ROTATION[rotationIndex % QUERY_ROTATION.length] ?? QUERY_ROTATION[0];
+  rotationIndex += 1;
+  return query;
+};
+
 export const fetchJSearchJobs = async (): Promise<NormalizedJob[]> => {
-  console.log("🔍 Fetching JSearch jobs...");
+  const query = nextQuery();
+  console.log(`🔍 Fetching JSearch jobs... (query: "${query}")`);
 
   const url = new URL("https://jsearch.p.rapidapi.com/search-v2");
-  url.searchParams.set("query", "software developer engineer India");
+  url.searchParams.set("query", query);
   url.searchParams.set("num_pages", "1"); // each extra page beyond 1 typically costs its own quota unit — leave at 1
   url.searchParams.set("page", "1");
   url.searchParams.set("page_size", "10");

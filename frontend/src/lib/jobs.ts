@@ -3,6 +3,7 @@ export interface BackendJob {
   title: string;
   slug: string;
   company: string;
+  companyLogo: string;
   location: string | null;
   skills: string[] | null;
   salary: string | null;

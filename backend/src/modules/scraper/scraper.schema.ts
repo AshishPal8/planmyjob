@@ -32,6 +32,22 @@ export const jsearchJobSchema = z.object({
   job_required_skills: z.array(z.string()).nullable().optional(),
 });
 
+export const remoteOkJobSchema = z.object({
+  id: z.string(),
+  slug: z.string().optional(),
+  position: z.string(),
+  company: z.string(),
+  company_logo: z.string().nullable().optional(),
+  tags: z.array(z.string()).default([]),
+  description: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
+  salary_min: z.number().nullable().optional(),
+  salary_max: z.number().nullable().optional(),
+  url: z.string().optional(),
+  apply_url: z.string().nullable().optional(),
+  date: z.string(),
+});
+
 export const remotiveResponseSchema = z.object({
   jobs: z.array(remotiveJobSchema),
 });
@@ -44,8 +60,13 @@ export const jsearchResponseSchema = z.object({
   }),
 });
 
+// RemoteOK returns a bare array whose first element is a legal-notice object
+// with no `id` — everything else is a real job.
+export const remoteOkResponseSchema = z.array(z.unknown());
+
 export type RemotiveJob = z.infer<typeof remotiveJobSchema>;
 export type JSearchJob = z.infer<typeof jsearchJobSchema>;
+export type RemoteOkJob = z.infer<typeof remoteOkJobSchema>;
 
 export type JobType =
   | "full_time"
@@ -54,7 +75,7 @@ export type JobType =
   | "freelance"
   | "internship"
   | "remote";
-export type JobSource = "remotive" | "jsearch" | "manual";
+export type JobSource = "remotive" | "jsearch" | "remoteok" | "manual";
 
 export type NormalizedJob = {
   title: string;
