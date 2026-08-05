@@ -30,6 +30,11 @@ dotenv.config();
 const app = express();
 const PORT = envConfig.port || 4000;
 
+// trust exactly one proxy hop (Nginx, on the same box) — required so
+// express-rate-limit can safely read the real client IP from the
+// X-Forwarded-For header Nginx adds, instead of rejecting every request
+app.set("trust proxy", 1);
+
 // security headers
 app.use(helmet());
 
