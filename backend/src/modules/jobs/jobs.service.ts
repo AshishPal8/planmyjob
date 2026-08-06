@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, lt, sql } from "drizzle-orm";
 import { db } from "../../db";
 import { jobs } from "../../db/schema/job.schema";
 import { savedJobs, jobApplications } from "../../db/schema";
@@ -83,7 +83,7 @@ export const deactivateOldJobs = async (olderThanDays = 30): Promise<void> => {
   const result = await db
     .update(jobs)
     .set({ isActive: false, updatedAt: new Date() })
-    .where(eq(jobs.isActive, true))
+    .where(and(eq(jobs.isActive, true), lt(jobs.createdAt, cutoff)))
     .returning({ id: jobs.id });
 
   if (result.length > 0) {
