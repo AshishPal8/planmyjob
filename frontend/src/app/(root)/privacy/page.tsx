@@ -31,7 +31,7 @@ const sections = [
   },
   {
     title: "Contact Us",
-    body: `For any privacy-related questions or requests, please contact our Data Protection team at privacy@findurjob.in or write to us at FindurJob Technologies Pvt. Ltd., Bengaluru, Karnataka, India.`,
+    body: `For any privacy-related questions or requests, please contact our Data Protection team at privacy@planurjob.in or write to us at PlanurJob Technologies Pvt. Ltd., Bengaluru, Karnataka, India.`,
   },
 ];
 
@@ -60,11 +60,15 @@ export default function PrivacyPage() {
       {/* Content */}
       <section className="max-w-3xl mx-auto px-4 py-12 space-y-6">
         <div className="bg-primary/10 border border-primary/20 rounded-2xl p-5 text-sm text-primary font-medium">
-          Your privacy matters to us. This policy explains what data we collect, how we use it, and the choices you have.
+          Your privacy matters to us. This policy explains what data we collect,
+          how we use it, and the choices you have.
         </div>
 
         {sections.map((s) => (
-          <div key={s.title} className="bg-white border border-[#e2eaf8] rounded-2xl p-6">
+          <div
+            key={s.title}
+            className="bg-white border border-[#e2eaf8] rounded-2xl p-6"
+          >
             <h2
               className="font-bold text-[#0c1a3a] mb-3"
               style={{ fontFamily: "Sora, sans-serif" }}

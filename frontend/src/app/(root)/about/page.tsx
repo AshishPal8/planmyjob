@@ -26,7 +26,7 @@ const values = [
   {
     icon: Award,
     title: "Trusted by Thousands",
-    desc: "Over 120,000 professionals have found their next opportunity through FindurJob since our founding.",
+    desc: "Over 120,000 professionals have found their next opportunity through PlanurJob since our founding.",
   },
 ];
 
@@ -40,11 +40,11 @@ export default function AboutPage() {
             className="text-4xl font-bold text-[#0c1a3a] mb-4"
             style={{ fontFamily: "Sora, sans-serif" }}
           >
-            About <span className="text-primary">FindurJob</span>
+            About <span className="text-primary">PlanurJob</span>
           </h1>
           <p className="text-[#7a92c1] text-lg leading-relaxed">
             We are on a mission to make job searching smarter, faster, and more
-            human. FindurJob uses AI to match your skills with the right roles —
+            human. PlanurJob uses AI to match your skills with the right roles —
             so you spend less time searching and more time interviewing.
           </p>
         </div>
@@ -89,7 +89,9 @@ export default function AboutPage() {
               </div>
               <div>
                 <h3 className="font-bold text-[#0c1a3a] mb-1">{v.title}</h3>
-                <p className="text-sm text-[#7a92c1] leading-relaxed">{v.desc}</p>
+                <p className="text-sm text-[#7a92c1] leading-relaxed">
+                  {v.desc}
+                </p>
               </div>
             </div>
           ))}
@@ -106,13 +108,13 @@ export default function AboutPage() {
             Our Story
           </h2>
           <p className="text-[#7a92c1] leading-relaxed mb-4">
-            FindurJob was born out of frustration. Our founders spent months
+            PlanurJob was born out of frustration. Our founders spent months
             applying to hundreds of jobs, only to hear nothing back. The problem
             was not the candidates — it was the mismatch between skills and
             listings.
           </p>
           <p className="text-[#7a92c1] leading-relaxed">
-            We built FindurJob to solve that. By analysing resumes with AI and
+            We built PlanurJob to solve that. By analysing resumes with AI and
             surfacing only the most relevant roles, we help job seekers work
             smarter — not harder. Today, we are proud to serve over 120,000
             professionals and growing every day.

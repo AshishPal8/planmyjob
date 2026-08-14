@@ -3,11 +3,11 @@ import { FileText } from "lucide-react";
 const sections = [
   {
     title: "Acceptance of Terms",
-    body: `By accessing or using FindurJob, you agree to be bound by these Terms of Service and our Privacy Policy. If you do not agree to these terms, please do not use our platform. We reserve the right to update these terms at any time with reasonable notice.`,
+    body: `By accessing or using PlanurJob, you agree to be bound by these Terms of Service and our Privacy Policy. If you do not agree to these terms, please do not use our platform. We reserve the right to update these terms at any time with reasonable notice.`,
   },
   {
     title: "Eligibility",
-    body: `You must be at least 18 years old to use FindurJob. By using our platform, you confirm that you meet this age requirement and have the legal capacity to enter into a binding agreement.`,
+    body: `You must be at least 18 years old to use PlanurJob. By using our platform, you confirm that you meet this age requirement and have the legal capacity to enter into a binding agreement.`,
   },
   {
     title: "Your Account",
@@ -19,19 +19,19 @@ const sections = [
   },
   {
     title: "Job Listings & Applications",
-    body: `FindurJob aggregates job listings from multiple sources. We do not guarantee the accuracy or availability of any listing. We are not responsible for the hiring decisions of employers. By applying to a job, you consent to sharing your profile and resume with that employer.`,
+    body: `PlanurJob aggregates job listings from multiple sources. We do not guarantee the accuracy or availability of any listing. We are not responsible for the hiring decisions of employers. By applying to a job, you consent to sharing your profile and resume with that employer.`,
   },
   {
     title: "Resume & Content",
-    body: `By uploading your resume or any content, you grant FindurJob a non-exclusive, royalty-free licence to use that content to provide our services, including AI-based job matching. You retain full ownership of your content. We will not share your resume without your explicit consent.`,
+    body: `By uploading your resume or any content, you grant PlanurJob a non-exclusive, royalty-free licence to use that content to provide our services, including AI-based job matching. You retain full ownership of your content. We will not share your resume without your explicit consent.`,
   },
   {
     title: "Intellectual Property",
-    body: `All content, design, logos, and software on FindurJob are the property of FindurJob Technologies Pvt. Ltd. and protected by applicable intellectual property laws. You may not reproduce, distribute, or create derivative works without our prior written consent.`,
+    body: `All content, design, logos, and software on PlanurJob are the property of PlanurJob Technologies Pvt. Ltd. and protected by applicable intellectual property laws. You may not reproduce, distribute, or create derivative works without our prior written consent.`,
   },
   {
     title: "Limitation of Liability",
-    body: `FindurJob is provided "as is." We make no warranties regarding uninterrupted access or job placement outcomes. To the fullest extent permitted by law, we shall not be liable for any indirect, incidental, or consequential damages arising from your use of our platform.`,
+    body: `PlanurJob is provided "as is." We make no warranties regarding uninterrupted access or job placement outcomes. To the fullest extent permitted by law, we shall not be liable for any indirect, incidental, or consequential damages arising from your use of our platform.`,
   },
   {
     title: "Governing Law",
@@ -39,7 +39,7 @@ const sections = [
   },
   {
     title: "Contact",
-    body: `For questions about these Terms, please contact us at legal@findurjob.in or write to FindurJob Technologies Pvt. Ltd., Bengaluru, Karnataka, India.`,
+    body: `For questions about these Terms, please contact us at legal@planurjob.in or write to PlanurJob Technologies Pvt. Ltd., Noida, Uttar Pradesh, India.`,
   },
 ];
 
@@ -60,7 +60,8 @@ export default function TermsPage() {
             Terms of Service
           </h1>
           <p className="text-[#7a92c1]">
-            Last updated: June 2025 &nbsp;·&nbsp; Please read carefully before using FindurJob.
+            Last updated: June 2025 &nbsp;·&nbsp; Please read carefully before
+            using PlanurJob.
           </p>
         </div>
       </section>
@@ -68,11 +69,15 @@ export default function TermsPage() {
       {/* Content */}
       <section className="max-w-3xl mx-auto px-4 py-12 space-y-6">
         <div className="bg-primary/10 border border-primary/20 rounded-2xl p-5 text-sm text-primary font-medium">
-          These Terms govern your use of FindurJob. By using our platform you agree to these terms in full.
+          These Terms govern your use of PlanurJob. By using our platform you
+          agree to these terms in full.
         </div>
 
         {sections.map((s, i) => (
-          <div key={s.title} className="bg-white border border-[#e2eaf8] rounded-2xl p-6">
+          <div
+            key={s.title}
+            className="bg-white border border-[#e2eaf8] rounded-2xl p-6"
+          >
             <div className="flex items-start gap-3">
               <span className="w-7 h-7 rounded-lg bg-primary/10 text-primary text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
                 {i + 1}
@@ -84,7 +89,9 @@ export default function TermsPage() {
                 >
                   {s.title}
                 </h2>
-                <p className="text-sm text-[#2d4070] leading-relaxed">{s.body}</p>
+                <p className="text-sm text-[#2d4070] leading-relaxed">
+                  {s.body}
+                </p>
               </div>
             </div>
           </div>

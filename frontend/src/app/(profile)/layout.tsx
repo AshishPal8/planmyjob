@@ -2,7 +2,17 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Briefcase, Menu, X, Home, Search, User, Bookmark, Send, LogOut } from "lucide-react";
+import {
+  Briefcase,
+  Menu,
+  X,
+  Home,
+  Search,
+  User,
+  Bookmark,
+  Send,
+  LogOut,
+} from "lucide-react";
 import DashboardSidebar from "@/components/layouts/DashboardSidebar";
 import { useAuthStore } from "@/store/auth-store";
 import api from "@/lib/axios";
@@ -13,7 +23,9 @@ function MobileTopBar() {
   const router = useRouter();
 
   const handleLogout = async () => {
-    try { await api.post("/auth/logout"); } catch {}
+    try {
+      await api.post("/auth/logout");
+    } catch {}
     clearAuth();
     router.push("/");
   };
@@ -32,18 +44,27 @@ function MobileTopBar() {
         <div className="w-7 h-7 bg-primary rounded-xl flex items-center justify-center">
           <Briefcase size={13} className="text-white" />
         </div>
-        <span className="font-bold text-base text-[#0c1a3a]" style={{ fontFamily: "Sora,sans-serif" }}>
-          Findur<span className="text-primary">Job</span>
+        <span
+          className="font-bold text-base text-[#0c1a3a]"
+          style={{ fontFamily: "Sora,sans-serif" }}
+        >
+          Planur<span className="text-primary">Job</span>
         </span>
       </Link>
 
-      <button onClick={() => setOpen(!open)} className="p-2 text-[#2d4070] rounded-lg hover:bg-primary/10">
+      <button
+        onClick={() => setOpen(!open)}
+        className="p-2 text-[#2d4070] rounded-lg hover:bg-primary/10"
+      >
         {open ? <X size={20} /> : <Menu size={20} />}
       </button>
 
       {open && (
         <>
-          <div className="fixed inset-0 top-14 bg-black/30 z-40" onClick={() => setOpen(false)} />
+          <div
+            className="fixed inset-0 top-14 bg-black/30 z-40"
+            onClick={() => setOpen(false)}
+          />
           <div className="fixed top-14 left-0 right-0 bg-white border-b border-[#e2eaf8] z-50 px-4 py-3 space-y-1">
             {user && (
               <div className="flex items-center gap-3 px-3 py-3 mb-2 bg-[#f8fbff] rounded-2xl">
@@ -51,8 +72,12 @@ function MobileTopBar() {
                   {user.name?.[0]?.toUpperCase()}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-bold text-[#0c1a3a] truncate">{user.name}</p>
-                  <p className="text-xs text-[#7a92c1] truncate">{user.email}</p>
+                  <p className="text-sm font-bold text-[#0c1a3a] truncate">
+                    {user.name}
+                  </p>
+                  <p className="text-xs text-[#7a92c1] truncate">
+                    {user.email}
+                  </p>
                 </div>
               </div>
             )}

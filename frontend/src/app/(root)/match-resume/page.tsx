@@ -47,8 +47,8 @@ export default function MatchResumePage() {
             Match My Resume to Jobs
           </h1>
           <p className="text-[#7a92c1] text-lg mb-8">
-            Upload your resume and instantly discover jobs that match your skills
-            and experience with AI-powered precision.
+            Upload your resume and instantly discover jobs that match your
+            skills and experience with AI-powered precision.
           </p>
 
           {matched ? (
@@ -106,7 +106,8 @@ export default function MatchResumePage() {
             Ready to find your perfect job match?
           </h2>
           <p className="text-primary-foreground/80 mb-6">
-            Join thousands of job seekers who found their dream role with FindurJob.
+            Join thousands of job seekers who found their dream role with
+            PlanurJob.
           </p>
           <Button
             variant="secondary"
