@@ -67,7 +67,7 @@ export default function DashboardSidebar() {
             className="font-bold text-lg text-[#0c1a3a]"
             style={{ fontFamily: "Sora,sans-serif" }}
           >
-            Findur<span className="text-blue-600">Job</span>
+            Planur<span className="text-blue-600">Job</span>
           </span>
         </Link>
       </div>
@@ -123,14 +123,14 @@ export default function DashboardSidebar() {
           </Link>
         ))}
       </nav>
- 
+
       {/* Sign out */}
       <div className="px-3 py-4 border-t border-[#e2eaf8]">
         <button
           onClick={handleLogout}
           className="sidebar-item w-full hover:text-red-500 hover:bg-red-50"
         >
-          <LogOut size={16}  />
+          <LogOut size={16} />
           Sign Out
         </button>
       </div>

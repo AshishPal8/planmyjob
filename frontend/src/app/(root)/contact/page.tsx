@@ -7,7 +7,7 @@ const contactInfo = [
   {
     icon: Mail,
     label: "Email Us",
-    value: "info@findurjob.com",
+    value: "info@planurjob.com",
     sub: "We reply within 24 hours",
   },
   {
@@ -19,7 +19,12 @@ const contactInfo = [
 ];
 
 export default function ContactPage() {
-  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
+  });
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -58,7 +63,9 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <p className="text-xs text-[#7a92c1] mb-0.5">{c.label}</p>
-                  <p className="font-semibold text-[#0c1a3a] text-sm">{c.value}</p>
+                  <p className="font-semibold text-[#0c1a3a] text-sm">
+                    {c.value}
+                  </p>
                   <p className="text-xs text-[#7a92c1]">{c.sub}</p>
                 </div>
               </div>
@@ -72,64 +79,88 @@ export default function ContactPage() {
                 <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
                   <CheckCircle size={28} className="text-primary" />
                 </div>
-                <h3 className="font-bold text-[#0c1a3a] text-lg">Message Sent!</h3>
+                <h3 className="font-bold text-[#0c1a3a] text-lg">
+                  Message Sent!
+                </h3>
                 <p className="text-[#7a92c1] text-sm">
-                  Thanks for reaching out. We will get back to you within 24 hours.
+                  Thanks for reaching out. We will get back to you within 24
+                  hours.
                 </p>
                 <Button
                   variant="outline"
                   className="rounded-xl mt-2"
-                  onClick={() => { setSubmitted(false); setForm({ name: "", email: "", subject: "", message: "" }); }}
+                  onClick={() => {
+                    setSubmitted(false);
+                    setForm({ name: "", email: "", subject: "", message: "" });
+                  }}
                 >
                   Send Another
                 </Button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
-                <h2 className="font-bold text-[#0c1a3a] text-lg mb-2">Send a Message</h2>
+                <h2 className="font-bold text-[#0c1a3a] text-lg mb-2">
+                  Send a Message
+                </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-semibold text-[#7a92c1] mb-1 block">Name</label>
+                    <label className="text-xs font-semibold text-[#7a92c1] mb-1 block">
+                      Name
+                    </label>
                     <input
                       required
                       type="text"
                       placeholder="Your name"
                       value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      onChange={(e) =>
+                        setForm({ ...form, name: e.target.value })
+                      }
                       className="w-full border border-[#e2eaf8] rounded-xl px-4 py-2.5 text-sm text-[#0c1a3a] outline-none focus:border-primary transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-[#7a92c1] mb-1 block">Email</label>
+                    <label className="text-xs font-semibold text-[#7a92c1] mb-1 block">
+                      Email
+                    </label>
                     <input
                       required
                       type="email"
                       placeholder="your@email.com"
                       value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      onChange={(e) =>
+                        setForm({ ...form, email: e.target.value })
+                      }
                       className="w-full border border-[#e2eaf8] rounded-xl px-4 py-2.5 text-sm text-[#0c1a3a] outline-none focus:border-primary transition-colors"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-[#7a92c1] mb-1 block">Subject</label>
+                  <label className="text-xs font-semibold text-[#7a92c1] mb-1 block">
+                    Subject
+                  </label>
                   <input
                     required
                     type="text"
                     placeholder="How can we help?"
                     value={form.subject}
-                    onChange={(e) => setForm({ ...form, subject: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, subject: e.target.value })
+                    }
                     className="w-full border border-[#e2eaf8] rounded-xl px-4 py-2.5 text-sm text-[#0c1a3a] outline-none focus:border-primary transition-colors"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-[#7a92c1] mb-1 block">Message</label>
+                  <label className="text-xs font-semibold text-[#7a92c1] mb-1 block">
+                    Message
+                  </label>
                   <textarea
                     required
                     rows={5}
                     placeholder="Write your message here..."
                     value={form.message}
-                    onChange={(e) => setForm({ ...form, message: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, message: e.target.value })
+                    }
                     className="w-full border border-[#e2eaf8] rounded-xl px-4 py-2.5 text-sm text-[#0c1a3a] outline-none focus:border-primary transition-colors resize-none"
                   />
                 </div>

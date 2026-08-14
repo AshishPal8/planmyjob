@@ -46,7 +46,7 @@ export default function Footer() {
             </p>
             <div className="space-y-2 text-sm text-white/40">
               <div className="flex items-center gap-2">
-                <Mail size={13} /> info@findurjob.in
+                <Mail size={13} /> info@planurjob.in
               </div>
 
               <div className="flex items-center gap-2">
@@ -83,7 +83,7 @@ export default function Footer() {
         <hr className="border-white/10 mb-6" />
         <div className="flex flex-col md:flex-row items-center justify-between gap-3">
           <p className="text-white/30 text-sm">
-            © {new Date().getFullYear()} FindurJob Technologies Pvt. Ltd. All
+            © {new Date().getFullYear()} PlanurJob Technologies Pvt. Ltd. All
             rights reserved.
           </p>
           <div className="flex gap-5">
