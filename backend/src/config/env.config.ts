@@ -5,7 +5,7 @@ export const envConfig = {
   port: parseInt(process.env.PORT || "4000", 10),
   nodeEnv: process.env.NODE_ENV || "development",
   frontendUrl: process.env.CLIENT_URL! || "http://localhost:3000",
-  cookieDomain: process.env.envCOOKIE_DOMAIN,
+  cookieDomain: process.env.COOKIE_DOMAIN,
 
   database: {
     url: process.env.DATABASE_URL!,
