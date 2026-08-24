@@ -13,6 +13,7 @@ import {
 import { validateRequest } from "../../middleware/validateRequest";
 import { getJobsSchema } from "./jobs.schema";
 import { requireAuth } from "../../middleware/requireAuth";
+import { requireAdmin } from "../../middleware/requireRole";
 import { optionalAuth } from "../../middleware/optionalAuth";
 
 const router = Router();
@@ -35,9 +36,9 @@ router.post("/save/:jobId", requireAuth, saveJob);
 // track apply click
 router.post("/apply/:jobId", requireAuth, applyJob);
 
-// scraper triggers
-router.post("/scrape/remotive", triggerRemotive);
-router.post("/scrape/jsearch", triggerJSearch);
+// scraper triggers (protected — Admin only)
+router.post("/scrape/remotive", requireAuth, requireAdmin, triggerRemotive);
+router.post("/scrape/jsearch", requireAuth, requireAdmin, triggerJSearch);
 
 // job detail
 router.get("/:slug", optionalAuth, getJobBySlug);

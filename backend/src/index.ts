@@ -11,10 +11,10 @@ import {
   globalLimiter,
   globalSlowDown,
   authLimiter,
-  uploadLimiter,
   matchLimiter,
   searchLimiter,
   applyLimiter,
+  adminLimiter,
 } from "./middleware/rateLimiter";
 
 import authRoutes from "./modules/auth/auth.route";
@@ -24,22 +24,25 @@ import userRoutes from "./modules/user/user.route";
 import searchRoutes from "./modules/search/search.route";
 import adminRoutes from "./modules/admin/admin.route";
 
-import { startAllCrons } from "./cron";
-
 dotenv.config();
 
 const app = express();
 const PORT = envConfig.port || 4000;
 
-// trust exactly one proxy hop (Nginx, on the same box) — required so
-// express-rate-limit can safely read the real client IP from the
-// X-Forwarded-For header Nginx adds, instead of rejecting every request
+// Security: Hide Express fingerprint
+app.disable("x-powered-by");
+
+// Trust proxy: exactly 1 hop (Nginx / ALB) for accurate client IP in rate limiting
 app.set("trust proxy", 1);
 
-// security headers
-app.use(helmet());
+// Security headers with Helmet
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  }),
+);
 
-// CORS
+// CORS configuration
 app.use(
   cors({
     origin: envConfig.frontendUrl,
@@ -48,39 +51,39 @@ app.use(
   }),
 );
 
-// body size cap — prevent large payload attacks
-app.use(express.json({ limit: "1mb" }));
-app.use(express.urlencoded({ extended: true, limit: "1mb" }));
+// Body size cap — tightened to 500kb to prevent memory bloat DoS
+app.use(express.json({ limit: "500kb" }));
+app.use(express.urlencoded({ extended: true, limit: "500kb" }));
 
-// HTTP parameter pollution prevention
+// HTTP Parameter Pollution protection
 app.use(hpp());
 
 app.use(cookieParser());
 
-// global rate limit + slow down on all routes
+// Global safety ceiling & progressive slow-down per IP
 app.use(globalSlowDown);
 app.use(globalLimiter);
 
+// Health check endpoint
 app.get("/health", (_req, res) => {
-  res.json({ success: true });
+  res.json({ success: true, timestamp: new Date().toISOString() });
 });
 
-// Routes — per-route limiters applied before the router
+// Per-route security & rate limiters
 app.use("/api/auth", authLimiter, authRoutes);
-app.use("/api/upload", uploadLimiter, uploadRoutes);
+app.use("/api/upload", uploadRoutes); // Route-level daily & burst limiters inside
 app.use("/api/jobs/match", matchLimiter);
 app.use("/api/jobs/apply", applyLimiter);
 app.use("/api/jobs", jobsRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/search", searchLimiter, searchRoutes);
-app.use("/api/admin", adminRoutes);
+app.use("/api/admin", adminLimiter, adminRoutes);
 
+// Global Error Handler
 app.use(globalErrorHandler);
 
 (async () => {
   await connectDB();
-
-  // startAllCrons();
 
   app.listen(PORT, () => {
     console.log(`🚀 Server is running on port ${PORT}`);
