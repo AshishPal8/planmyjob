@@ -2,13 +2,14 @@ import {
   pgTable,
   serial,
   text,
+  varchar,
   integer,
   boolean,
   timestamp,
   pgEnum,
   index,
 } from "drizzle-orm/pg-core";
-
+import { companies } from "./company.schema";
 
 export const jobTypeEnum = pgEnum("job_type", [
   "full_time",
@@ -26,6 +27,20 @@ export const jobSourceEnum = pgEnum("job_source", [
   "manual",
 ]);
 
+export const workplaceTypeEnum = pgEnum("workplace_type", [
+  "remote",
+  "hybrid",
+  "on_site",
+]);
+
+export const experienceLevelEnum = pgEnum("experience_level", [
+  "entry",
+  "mid",
+  "senior",
+  "lead",
+  "executive",
+]);
+
 export const jobs = pgTable(
   "jobs",
   {
@@ -35,6 +50,7 @@ export const jobs = pgTable(
     slug: text("slug").unique().notNull(),
 
     company: text("company").notNull(),
+    companyId: integer("company_id").references(() => companies.id),
     companyLogo: text("company_logo"),
     companyDomain: text("company_domain"),
     location: text("location"),
@@ -42,8 +58,13 @@ export const jobs = pgTable(
     skills: text("skills").array(),
 
     salary: text("salary"),
+    minSalary: integer("min_salary"),
+    maxSalary: integer("max_salary"),
+    salaryCurrency: varchar("salary_currency", { length: 10 }).default("USD"),
 
     jobType: jobTypeEnum("job_type"),
+    workplaceType: workplaceTypeEnum("workplace_type").default("remote"),
+    experienceLevel: experienceLevelEnum("experience_level"),
     category: text("category"),
     applyUrl: text("apply_url"),
 
@@ -52,6 +73,7 @@ export const jobs = pgTable(
     sourceUrl: text("source_url"),
 
     applyCount: integer("apply_count").default(0).notNull(),
+    isFeatured: boolean("is_featured").default(false).notNull(),
 
     isActive: boolean("is_active").default(true).notNull(),
     isDeleted: boolean("is_deleted").default(false).notNull(),
@@ -69,3 +91,7 @@ export const jobs = pgTable(
     index("jobs_skills_gin_idx").using("gin", t.skills),
   ],
 );
+
+export type Job = typeof jobs.$inferSelect;
+export type NewJob = typeof jobs.$inferInsert;
+

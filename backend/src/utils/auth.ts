@@ -5,6 +5,7 @@ import { envConfig } from "../config/env.config";
 export interface TokenPayload {
   id: number;
   email: string;
+  role?: string;
 }
 
 export function generateToken(payload: TokenPayload): string {
@@ -12,6 +13,7 @@ export function generateToken(payload: TokenPayload): string {
     expiresIn: "30d",
   });
 }
+
 
 export function verifyToken(token: string): TokenPayload | null {
   try {

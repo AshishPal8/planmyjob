@@ -1,5 +1,6 @@
 export * from "./user.schema";
 export * from "./resume.schema";
+export * from "./company.schema";
 export * from "./job.schema";
 export * from "./profile.schema";
 export * from "./skill.schema";
@@ -7,3 +8,5 @@ export * from "./city.schema";
 export * from "./saved_job.schema";
 export * from "./job_application.schema";
 export * from "./company_flag_master.schema";
+export * from "./settings.schema";
+
