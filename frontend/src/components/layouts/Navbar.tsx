@@ -13,7 +13,10 @@ import {
   LayoutDashboard,
   Bookmark,
   Settings,
+  Shield,
+  Sparkles,
 } from "lucide-react";
+
 
 import {
   DropdownMenu,
@@ -112,18 +115,18 @@ export default function Navbar({
 
           {/* Right actions */}
           <div className="flex items-center gap-1 md:gap-3">
+            {user && (user.role === "admin" || user.role === "superadmin") && (
+              <Link
+                href="/admin"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-white text-xs font-semibold hover:bg-primary/90 shadow-sm transition-all"
+              >
+                <Shield size={13} />
+                <span>Admin Panel</span>
+              </Link>
+            )}
+
             {user ? (
               <>
-                {/* <Link
-                  href="/dashboard"
-                  className={cn(
-                    buttonVariants({ variant: "ghost", size: "icon" }),
-                    "rounded-xl",
-                  )}
-                >
-                  <Bell size={16} />
-                </Link> */}
-
                 {/* Mobile hamburger */}
                 <button
                   onClick={() => setOpen(!open)}
@@ -189,6 +192,20 @@ export default function Navbar({
                     </div>
 
                     <div className="space-y-1">
+                      {(user.role === "admin" || user.role === "superadmin") && (
+                        <DropdownMenuItem
+                          render={<Link href="/admin" />}
+                          className="rounded-xl px-3 py-2.5 cursor-pointer bg-primary/10 hover:bg-primary/20 text-primary mb-1 font-semibold"
+                        >
+                          <div className="flex items-center gap-3 text-sm text-primary w-full">
+                            <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+                              <Shield size={14} />
+                            </div>
+                            <span className="font-bold">SuperAdmin Panel</span>
+                          </div>
+                        </DropdownMenuItem>
+                      )}
+
                       {[
                         {
                           icon: LayoutDashboard,
@@ -204,7 +221,7 @@ export default function Navbar({
                         {
                           icon: Settings,
                           label: "Account Settings",
-                          href: "/dashboard",
+                          href: "/profile",
                         },
                       ].map((item) => (
                         <DropdownMenuItem
@@ -239,6 +256,7 @@ export default function Navbar({
                 </DropdownMenu>
               </>
             ) : (
+
               <>
                 <Button
                   onClick={() => {
@@ -279,6 +297,19 @@ export default function Navbar({
           <div className="pt-3 flex flex-col gap-2">
             {user ? (
               <>
+                {(user.role === "admin" || user.role === "superadmin") && (
+                  <Link
+                    href="/admin"
+                    className={cn(
+                      buttonVariants({ variant: "default" }),
+                      "w-full rounded-xl gap-2 font-bold",
+                    )}
+                    onClick={() => setOpen(false)}
+                  >
+                    <Shield size={16} />
+                    Admin Panel
+                  </Link>
+                )}
                 <Link
                   href="/dashboard"
                   className={cn(
@@ -289,6 +320,7 @@ export default function Navbar({
                 >
                   Dashboard
                 </Link>
+
                 <button
                   className={cn(
                     buttonVariants({ variant: "ghost" }),

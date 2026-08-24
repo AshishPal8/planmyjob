@@ -4,8 +4,9 @@ dotenv.config();
 export const envConfig = {
   port: parseInt(process.env.PORT || "4000", 10),
   nodeEnv: process.env.NODE_ENV || "development",
-  frontendUrl: process.env.CLIENT_URL! || "http://localhost:3000",
-  cookieDomain: process.env.COOKIE_DOMAIN,
+  frontendUrl: (process.env.CLIENT_URL || "http://localhost:3000").trim(),
+  cookieDomain: process.env.COOKIE_DOMAIN?.trim(),
+
 
   database: {
     url: process.env.DATABASE_URL!,

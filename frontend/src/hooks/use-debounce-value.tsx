@@ -10,3 +10,6 @@ export function useDebouncedValue<T>(value: T, delay: number): T {
 
   return debounced;
 }
+
+export const useDebounceValue = useDebouncedValue;
+

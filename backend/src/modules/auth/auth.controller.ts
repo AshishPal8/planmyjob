@@ -45,6 +45,7 @@ export const googleCallback = async (
     const genereteToken = generateToken({
       id: user.id,
       email: user.email,
+      role: user.role,
     });
 
     setAuthCookie(res, genereteToken);
@@ -53,6 +54,7 @@ export const googleCallback = async (
     next(error);
   }
 };
+
 
 export const logout = (req: Request, res: Response): void => {
   clearAuthCookie(res);

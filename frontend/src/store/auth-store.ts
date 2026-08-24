@@ -27,6 +27,7 @@ export interface User {
   id: number;
   name: string;
   email: string;
+  role?: string;
   phone?: string;
   profilePicture?: string;
   location?: string;
@@ -43,6 +44,7 @@ export interface User {
   workExperiences?: WorkExperience[];
   educations?: Education[];
 }
+
 
 interface AuthState {
   token: string | null;

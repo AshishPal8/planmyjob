@@ -7,8 +7,10 @@ export const sanitizeUser = (user: typeof users.$inferSelect) => {
     email: user.email,
     phone: user.phone,
     profilePicture: user.profilePicture,
+    role: user.role,
     isActive: user.isActive,
     lastLoginAt: user.lastLoginAt,
     createdAt: user.createdAt,
   };
 };
+
