@@ -8,7 +8,7 @@ export const uploadResumeSchema = z.object({
     ],
     { message: "Only PDF or DOCX files are allowed" },
   ),
-  size: z.number().max(10 * 1024 * 1024, "File must be under 10MB"),
+  size: z.number().max(5 * 1024 * 1024, "Resume file must be under 5MB"),
 });
 
 export type UploadResumeInput = z.infer<typeof uploadResumeSchema>;

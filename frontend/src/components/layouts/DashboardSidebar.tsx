@@ -10,8 +10,7 @@ import {
   Send,
   Bookmark,
   User,
-  // Bell,
-  // Settings,
+  Sparkles,
   LogOut,
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
@@ -19,11 +18,10 @@ import { useAuthStore } from "@/store/auth-store";
 const navItems = [
   { icon: Home, label: "Overview", href: "/dashboard" },
   { icon: Search, label: "Find Jobs", href: "/jobs" },
+  { icon: Sparkles, label: "ATS Checker", href: "/ats-checker" },
   { icon: Send, label: "Applications", href: "/applications" },
   { icon: Bookmark, label: "Saved Jobs", href: "/saved-jobs" },
   { icon: User, label: "Profile", href: "/profile" },
-  // { icon: Bell, label: "Alerts", href: "/dashboard" },
-  // { icon: Settings, label: "Settings", href: "/dashboard" },
 ];
 
 export default function DashboardSidebar() {

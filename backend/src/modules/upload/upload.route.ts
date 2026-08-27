@@ -2,18 +2,39 @@ import { Router } from "express";
 import multer from "multer";
 import { uploadFile, uploadResume } from "./upload.controller";
 import { requireAuth } from "../../middleware/requireAuth";
+import {
+  resumeParseDailyLimiter,
+  resumeParseBurstLimiter,
+  fileUploadLimiter,
+} from "../../middleware/rateLimiter";
 
+// Cap memory storage buffer at 5MB to defend against RAM exhaustion
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 },
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+    files: 1,
+  },
 });
 
 const router = Router();
 
-// resume upload + AI extraction (existing)
-router.post("/", upload.single("resume"), uploadResume);
+// Public resume upload + AI extraction with daily 10/day limit & burst protection
+router.post(
+  "/",
+  resumeParseDailyLimiter,
+  resumeParseBurstLimiter,
+  upload.single("resume"),
+  uploadResume,
+);
 
-// simple file upload — returns url only (image or document)
-router.post("/file", requireAuth, upload.single("file"), uploadFile);
+// Authenticated simple file upload — image or document (rate-limited)
+router.post(
+  "/file",
+  requireAuth,
+  fileUploadLimiter,
+  upload.single("file"),
+  uploadFile,
+);
 
 export default router;

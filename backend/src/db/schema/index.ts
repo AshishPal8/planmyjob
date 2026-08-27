@@ -9,4 +9,5 @@ export * from "./saved_job.schema";
 export * from "./job_application.schema";
 export * from "./company_flag_master.schema";
 export * from "./settings.schema";
+export * from "./ats_scan.schema";
 
