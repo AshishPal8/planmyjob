@@ -7,14 +7,6 @@ import {
   ChevronDown,
   ChevronUp,
   Lightbulb,
-  Check,
-  Zap,
-  Target,
-  FileText,
-  UserCheck,
-  AlignLeft,
-  ListCheck,
-  Hash,
 } from "lucide-react";
 import type { ATSMetricDetail } from "@/types/ats";
 
@@ -29,16 +21,6 @@ interface Props {
     brevityAndLength: ATSMetricDetail;
   };
 }
-
-const metricIcons: Record<string, any> = {
-  bulletPoints: Zap,
-  quantifiableMetrics: Hash,
-  grammarAndTone: ListCheck,
-  keywordsAndSkills: Target,
-  formattingAndHierarchy: FileText,
-  contactInformation: UserCheck,
-  brevityAndLength: AlignLeft,
-};
 
 export default function AtsMetricAccordion({ metrics }: Props) {
   const [openKey, setOpenKey] = useState<string | null>("bulletPoints");
@@ -68,7 +50,6 @@ export default function AtsMetricAccordion({ metrics }: Props) {
       <div className="space-y-2">
         {metricList.map(([key, item]) => {
           const isOpen = openKey === key;
-          const Icon = metricIcons[key] || FileText;
 
           const isPass = item.status === "pass";
           const isFail = item.status === "fail";
@@ -158,10 +139,17 @@ export default function AtsMetricAccordion({ metrics }: Props) {
                     </span>
                     <ul className="space-y-1">
                       {item.findings.map((f, i) => (
-                        <li key={i} className="flex items-start gap-1.5 text-[11px] sm:text-xs">
+                        <li
+                          key={i}
+                          className="flex items-start gap-1.5 text-[11px] sm:text-xs"
+                        >
                           <span
                             className={`size-1 rounded-full mt-1.5 shrink-0 ${
-                              isPass ? "bg-emerald-500" : isFail ? "bg-red-500" : "bg-amber-500"
+                              isPass
+                                ? "bg-emerald-500"
+                                : isFail
+                                  ? "bg-red-500"
+                                  : "bg-amber-500"
                             }`}
                           />
                           <span>{f}</span>
@@ -174,7 +162,10 @@ export default function AtsMetricAccordion({ metrics }: Props) {
                   {item.tips && item.tips.length > 0 && (
                     <div className="p-2.5 rounded-lg bg-primary/5 border border-primary/15 text-[11px] sm:text-xs">
                       <div className="flex items-center gap-1.5 font-bold text-primary mb-1">
-                        <Lightbulb size={12} className="text-amber-500 fill-amber-500" />
+                        <Lightbulb
+                          size={12}
+                          className="text-amber-500 fill-amber-500"
+                        />
                         <span>Actionable Tip:</span>
                       </div>
                       <p className="text-[#0c1a3a]/80">{item.tips[0]}</p>
