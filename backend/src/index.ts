@@ -23,6 +23,7 @@ import jobsRoutes from "./modules/jobs/jobs.route";
 import userRoutes from "./modules/user/user.route";
 import searchRoutes from "./modules/search/search.route";
 import adminRoutes from "./modules/admin/admin.route";
+import atsRoutes from "./modules/ats/ats.route";
 
 dotenv.config();
 
@@ -78,6 +79,7 @@ app.use("/api/jobs", jobsRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/search", searchLimiter, searchRoutes);
 app.use("/api/admin", adminLimiter, adminRoutes);
+app.use("/api/ats", atsRoutes);
 
 // Global Error Handler
 app.use(globalErrorHandler);

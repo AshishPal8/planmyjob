@@ -2,6 +2,8 @@ export type AnalyticsEvent =
   | "sign_up"
   | "login"
   | "resume_uploaded"
+  | "ats_scan_completed"
+  | "ats_score_viewed"
   | "job_search"
   | "job_view"
   | "job_apply"

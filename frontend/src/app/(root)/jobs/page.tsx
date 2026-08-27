@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo, Suspense, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { X, SlidersHorizontal, Sparkles } from "lucide-react";
+import { X, SlidersHorizontal, Sparkles, Filter, Briefcase, RotateCcw, Loader2 } from "lucide-react";
 import BackendJobCard from "@/components/jobs/BackendJobCard";
 import JobCardSkeleton from "@/components/jobs/JobCardSkeleton";
 import type { BackendJob } from "@/lib/jobs";
@@ -58,8 +58,6 @@ const CATEGORY_KEYWORDS: Record<string, string[]> = {
 const PAGE_SIZE = 30;
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
-// Module-level cache so results survive navigating to a job detail page and back
-// (the component remounts, but this cache lives as long as the JS bundle is loaded).
 type JobsCacheEntry = {
   jobs: BackendJob[];
   total: number;
@@ -74,9 +72,6 @@ function jobsCacheKey(skills: string, loc: string, title: string) {
 
 const JOBS_SCROLL_KEY = "jobs-scroll-position";
 
-// Track whether the current mount was reached via the browser back/forward
-// button (popstate) rather than a fresh link click, so we only restore
-// scroll position on the former.
 let cameFromPopState = false;
 if (typeof window !== "undefined") {
   window.addEventListener("popstate", () => {
@@ -98,233 +93,272 @@ function JobsContent() {
   const [location, setLocation] = useState("");
   const [appliedSkills, setAppliedSkills] = useState("");
   const [appliedLocation, setAppliedLocation] = useState("");
-  const [selTypes, setSelTypes] = useState<string[]>([]);
+  const [appliedTitle, setAppliedTitle] = useState("");
   const [selCat, setSelCat] = useState("");
-  const [sortBy, setSortBy] = useState("relevance");
-  const [showResume, setShowResume] = useState(false);
+  const [selTypes, setSelTypes] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [showResume, setShowResume] = useState(false);
+  const [sortBy, setSortBy] = useState<string>("relevance");
 
   const sentinelRef = useRef<HTMLDivElement>(null);
-  // store current search params so the observer callback always has fresh values
-  const searchParamsRef = useRef({ skills: "", loc: "", title: "" });
 
-  const hasMore = allJobs.length < totalFromApi;
+  const saveScrollPos = useCallback(() => {
+    sessionStorage.setItem(JOBS_SCROLL_KEY, String(window.scrollY));
+  }, []);
 
-  const callApi = useCallback(async (skills: string, loc: string, title = "", page = 1) => {
-    searchParamsRef.current = { skills, loc, title };
-    const cacheKey = jobsCacheKey(skills, loc, title);
+  useEffect(() => {
+    const handleScroll = () => {
+      saveScrollPos();
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [saveScrollPos]);
 
-    if (page === 1) {
-      const cached = jobsCache.get(cacheKey);
-      if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
-        setAllJobs(cached.jobs);
-        setTotalFromApi(cached.total);
-        setCurrentPage(cached.page);
-        setLoading(false);
-        return;
+  useEffect(() => {
+    if (!loading && allJobs.length > 0 && cameFromPopState) {
+      cameFromPopState = false;
+      const savedY = sessionStorage.getItem(JOBS_SCROLL_KEY);
+      if (savedY !== null) {
+        window.scrollTo({ top: Number(savedY), behavior: "instant" });
       }
-      setLoading(true);
-      setCurrentPage(1);
-    } else {
-      setLoadingMore(true);
     }
+  }, [loading, allJobs]);
 
-    const skillsArr = skills
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
+  const callApi = useCallback(
+    async (
+      skillsStr: string,
+      locStr: string,
+      titleStr: string,
+      page = 1,
+      append = false,
+    ) => {
+      const skillsArray = skillsStr
+        ? skillsStr.split(",").map((s) => s.trim()).filter(Boolean)
+        : [];
+      const locationsArray = locStr
+        ? locStr.split(",").map((s) => s.trim()).filter(Boolean)
+        : [];
 
-    try {
-      const res = await api.post("/jobs/match", {
-        title,
-        skills: skillsArr,
-        locations: loc ? [loc] : [],
-        page,
-        pageSize: PAGE_SIZE,
-      });
-      const jobs: BackendJob[] = res.data?.data?.jobs ?? [];
-      const total: number = res.data?.data?.total ?? 0;
+      if (!append) setLoading(true);
+      else setLoadingMore(true);
 
-      setTotalFromApi(total);
-      if (page === 1) {
-        setAllJobs(jobs);
-        jobsCache.set(cacheKey, { jobs, total, page: 1, timestamp: Date.now() });
-      } else {
-        setAllJobs((prev) => {
-          const merged = [...prev, ...jobs];
-          jobsCache.set(cacheKey, { jobs: merged, total, page, timestamp: Date.now() });
-          return merged;
+      try {
+        const res = await api.post("/jobs/match", {
+          title: titleStr || "",
+          skills: skillsArray,
+          locations: locationsArray,
+          page,
+          pageSize: PAGE_SIZE,
         });
-        setCurrentPage(page);
-      }
-    } catch {
-      if (page === 1) setAllJobs([]);
-    } finally {
-      if (page === 1) setLoading(false);
-      else setLoadingMore(false);
-    }
-  }, []);
 
-  // Infinite scroll: observe sentinel, load next page when it enters viewport
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel || !hasMore || loadingMore) return;
+        const data = res.data?.data;
+        const newJobs: BackendJob[] = data?.jobs ?? [];
+        const total: number = data?.total ?? newJobs.length;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          const { skills, loc, title } = searchParamsRef.current;
-          callApi(skills, loc, title, currentPage + 1);
+        if (append) {
+          setAllJobs((prev) => {
+            const merged = [...prev, ...newJobs];
+            jobsCache.set(jobsCacheKey(skillsStr, locStr, titleStr), {
+              jobs: merged,
+              total,
+              page,
+              timestamp: Date.now(),
+            });
+            return merged;
+          });
+        } else {
+          setAllJobs(newJobs);
+          jobsCache.set(jobsCacheKey(skillsStr, locStr, titleStr), {
+            jobs: newJobs,
+            total,
+            page: 1,
+            timestamp: Date.now(),
+          });
         }
-      },
-      { threshold: 0.1 },
-    );
 
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [hasMore, loadingMore, currentPage, callApi]);
+        setTotalFromApi(total);
+        setCurrentPage(page);
 
-  // Continuously remember scroll position so we can restore it on back navigation
-  useEffect(() => {
-    const onScroll = () => {
-      sessionStorage.setItem(JOBS_SCROLL_KEY, String(window.scrollY));
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  // Restore scroll position once the (cached) jobs are back on screen, but only
-  // when we arrived here via the browser back button — a fresh visit should
-  // still start at the top. Next.js's own router also tries to manage scroll
-  // on back navigation, and can reset us to the top a frame or two after this
-  // effect runs, so we keep re-applying the saved position for a short window
-  // to win that race instead of just setting it once.
-  useEffect(() => {
-    if (loading) return;
-    if (!cameFromPopState) return;
-    cameFromPopState = false;
-
-    const saved = sessionStorage.getItem(JOBS_SCROLL_KEY);
-    if (!saved) return;
-    const y = parseInt(saved, 10);
-    if (!y) return;
-
-    let frame = 0;
-    let rafId: number;
-    const pin = () => {
-      window.scrollTo(0, y);
-      frame += 1;
-      if (frame < 15) rafId = requestAnimationFrame(pin);
-    };
-    rafId = requestAnimationFrame(pin);
-    return () => cancelAnimationFrame(rafId);
-  }, [loading]);
+        trackEvent("job_search", {
+          skills: skillsStr,
+          location: locStr,
+          title: titleStr,
+          results_count: total,
+          page,
+        });
+      } catch (error) {
+        console.error("Failed to fetch jobs:", error);
+        if (!append) setAllJobs([]);
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
-    const skills = searchParams.get("skills") || "";
-    const loc = searchParams.get("location") || "";
-    const isMatched = searchParams.get("matched") === "true";
-    const title = searchParams.get("title") || "";
-    const category = searchParams.get("category") || "";
+    const rawSkills = searchParams.get("skills") ?? "";
+    const rawLoc = searchParams.get("location") ?? "";
+    const rawTitle = searchParams.get("title") ?? "";
+    const rawCategory = searchParams.get("category") ?? "";
 
-    setSkillsInput(skills);
-    setLocation(loc);
-    setAppliedSkills(skills);
-    setAppliedLocation(loc);
-    setMatched(isMatched);
-    setMatchedTitle(title);
-    if (category && CATEGORY_KEYWORDS[category]) setSelCat(category);
+    setSkillsInput(rawSkills);
+    setLocation(rawLoc);
+    setAppliedSkills(rawSkills);
+    setAppliedLocation(rawLoc);
+    setAppliedTitle(rawTitle);
 
-    callApi(skills, loc, title);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    if (rawCategory) setSelCat(rawCategory);
+
+    const key = jobsCacheKey(rawSkills, rawLoc, rawTitle);
+    const cached = jobsCache.get(key);
+
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+      setAllJobs(cached.jobs);
+      setTotalFromApi(cached.total);
+      setCurrentPage(cached.page);
+      setLoading(false);
+      return;
+    }
+
+    callApi(rawSkills, rawLoc, rawTitle, 1, false);
+  }, [searchParams, callApi]);
 
   const displayedJobs = useMemo(() => {
-    let result = [...allJobs];
+    let list = [...allJobs];
 
-    if (selCat && CATEGORY_KEYWORDS[selCat]) {
-      const kws = CATEGORY_KEYWORDS[selCat];
-      result = result.filter((j) =>
-        kws.some((kw) => j.title.toLowerCase().includes(kw)),
-      );
+    if (selCat) {
+      const keywords = CATEGORY_KEYWORDS[selCat];
+      if (keywords) {
+        list = list.filter((j) => {
+          const text = `${j.title} ${j.description ?? ""}`.toLowerCase();
+          return keywords.some((k) => text.includes(k));
+        });
+      }
     }
 
     if (selTypes.length > 0) {
-      result = result.filter((j) =>
-        selTypes.some((t) => JOB_TYPE_MAP[t] === j.jobType),
-      );
+      const backendTypes = selTypes.map((t) => JOB_TYPE_MAP[t] ?? t);
+      list = list.filter((j) => {
+        const matchesType = backendTypes.includes(j.jobType ?? "");
+        const matchesRemote =
+          selTypes.includes("Remote") &&
+          (j.location?.toLowerCase().includes("remote") ||
+            (j as any).workplaceType === "remote");
+        return matchesType || matchesRemote;
+      });
     }
 
     if (sortBy === "recent") {
-      result = [...result].sort(
+      list.sort(
         (a, b) =>
-          new Date(b.postedAt ?? 0).getTime() -
-          new Date(a.postedAt ?? 0).getTime(),
+          new Date(b.postedAt ?? 0).getTime() - new Date(a.postedAt ?? 0).getTime(),
       );
+    } else if (sortBy === "relevance") {
+      list.sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0));
     }
 
-    return result;
+    return list;
   }, [allJobs, selCat, selTypes, sortBy]);
 
   const handleSearch = () => {
     setAppliedSkills(skillsInput);
     setAppliedLocation(location);
-    trackEvent("job_search", { skills: skillsInput, location });
-    callApi(skillsInput, location);
+    setMatched(false);
+    setMatchedTitle("");
+    callApi(skillsInput, location, appliedTitle, 1, false);
   };
 
-  const toggleType = (t: string) =>
-    setSelTypes((p) => (p.includes(t) ? p.filter((x) => x !== t) : [...p, t]));
+  const handleLoadMore = useCallback(() => {
+    if (loadingMore || loading) return;
+    const next = currentPage + 1;
+    callApi(appliedSkills, appliedLocation, appliedTitle, next, true);
+  }, [currentPage, appliedSkills, appliedLocation, appliedTitle, loadingMore, loading, callApi]);
+
+  const hasMore = allJobs.length < totalFromApi;
+
+  // Infinite Scroll Trigger via Intersection Observer
+  useEffect(() => {
+    if (!hasMore || loading || loadingMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          handleLoadMore();
+        }
+      },
+      {
+        rootMargin: "350px", // Trigger slightly before reaching the bottom
+      },
+    );
+
+    const el = sentinelRef.current;
+    if (el) observer.observe(el);
+
+    return () => {
+      if (el) observer.unobserve(el);
+    };
+  }, [hasMore, loading, loadingMore, handleLoadMore]);
+
+  const toggleType = (type: string) => {
+    setSelTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
+    );
+  };
 
   const clearAll = () => {
-    setSelTypes([]);
     setSelCat("");
+    setSelTypes([]);
     setSkillsInput("");
     setLocation("");
     setAppliedSkills("");
     setAppliedLocation("");
-    callApi("", "");
+    setAppliedTitle("");
+    setMatched(false);
+    callApi("", "", "", 1, false);
   };
 
   return (
-    <div className="min-h-screen bg-[#f0f5ff]">
+    <div className="min-h-screen bg-background text-foreground">
       {showResume && (
         <ResumeUploadModal
           open={showResume}
           onClose={() => setShowResume(false)}
-          onComplete={(_skills, _exp, title) => {
-            setShowResume(false);
-            const skillsStr = _skills.join(",");
+          onComplete={(skills, _exp, title) => {
+            const skillsStr = skills.join(", ");
             setSkillsInput(skillsStr);
             setAppliedSkills(skillsStr);
             setMatched(true);
             setMatchedTitle(title || "");
-            callApi(skillsStr, location, title);
+            callApi(skillsStr, location, title || "");
           }}
         />
       )}
 
-      <section className="pt-20 pb-6 bg-white border-b border-[#e2eaf8]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+      {/* ─── Top Header & Search Bar ─────────────────────── */}
+      <section className="pt-28 pb-8 bg-card border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
-              <h1
-                className="text-2xl font-bold text-[#0c1a3a]"
-                style={{ fontFamily: "Sora,sans-serif" }}
-              >
-                {matched
-                  ? "🎯 Jobs Matched to Your Resume"
-                  : "Find Your Next Opportunity"}
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
+                {matched ? "🎯 Jobs Matched to Your Profile" : "Explore Active Opportunities"}
               </h1>
-              {matched && (
-                <p className="text-blue-600 text-sm mt-0.5">
-                  {matchedTitle
-                    ? `Matched for ${matchedTitle} · sorted by relevance`
-                    : "Sorted by relevance to your skills"}
-                </p>
-              )}
+              <p className="text-muted-foreground text-sm mt-1">
+                {matched
+                  ? matchedTitle
+                    ? `Matched for ${matchedTitle} · sorted by AI compatibility score`
+                    : "Sorted by relevance to your extracted skills"
+                  : "Discover verified roles from top tech companies worldwide."}
+              </p>
             </div>
-            <Button onClick={() => setShowResume(true)}>
-              <Sparkles size={14} /> Match My Resume
+
+            <Button
+              onClick={() => setShowResume(true)}
+              className="font-semibold shrink-0 gap-2 cursor-pointer shadow-sm"
+            >
+              <Sparkles className="size-4" />
+              <span>Match My Resume</span>
             </Button>
           </div>
 
@@ -338,44 +372,77 @@ function JobsContent() {
           />
 
           {(appliedSkills || appliedLocation) && (
-            <div className="flex flex-wrap gap-2 mt-3">
+            <div className="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-border">
+              <span className="text-xs text-muted-foreground font-medium">Active filters:</span>
               {appliedSkills
                 .split(",")
                 .map((s) => s.trim())
                 .filter(Boolean)
                 .map((skill) => (
-                  <span key={skill} className="badge badge-blue text-xs">
+                  <span
+                    key={skill}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20 text-xs font-semibold"
+                  >
                     {skill}
                   </span>
                 ))}
               {appliedLocation && (
-                <span className="badge badge-sky text-xs">{appliedLocation}</span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-muted text-foreground text-xs font-semibold border border-border">
+                  {appliedLocation}
+                </span>
               )}
+              <button
+                onClick={clearAll}
+                className="text-xs font-semibold text-muted-foreground hover:text-destructive transition-colors ml-auto cursor-pointer"
+              >
+                Reset All
+              </button>
             </div>
           )}
         </div>
       </section>
 
+      {/* ─── Main Content: Static Sidebar + Scrolling Cards ──────── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col lg:flex-row gap-5 lg:gap-7">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
+          {/* Static/Sticky Sidebar Filter Card */}
           <aside
-            className={`${showFilters ? "block" : "hidden"} lg:block w-full lg:w-60 lg:shrink-0`}
+            className={`${
+              showFilters ? "block" : "hidden"
+            } lg:block w-full lg:w-64 shrink-0 lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-7.5rem)] lg:overflow-y-auto`}
           >
-            <div className="bg-white border border-[#e2eaf8] rounded-2xl p-5 lg:sticky lg:top-24 shadow-card space-y-6">
-              <div>
-                <h3
-                  className="text-[#0c1a3a] text-sm font-semibold mb-3"
-                  style={{ fontFamily: "Sora,sans-serif" }}
-                >
-                  Category
+            <div className="bg-card border border-border rounded-2xl p-5 shadow-xs space-y-6">
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-foreground text-sm flex items-center gap-2">
+                  <Filter className="size-4 text-primary" />
+                  Filter Jobs
                 </h3>
-                <div className="space-y-0.5">
+                {(selCat || selTypes.length > 0) && (
+                  <button
+                    onClick={() => {
+                      setSelCat("");
+                      setSelTypes([]);
+                    }}
+                    className="text-xs font-semibold text-primary hover:underline cursor-pointer"
+                  >
+                    Reset
+                  </button>
+                )}
+              </div>
+
+              {/* Categories */}
+              <div>
+                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2.5">
+                  Category
+                </h4>
+                <div className="space-y-1">
                   <button
                     onClick={() => setSelCat("")}
-                    className={`w-full text-left px-3 py-2 rounded-xl text-sm transition-all ${
+                    className={`w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                       !selCat
-                        ? "bg-blue-50 text-blue-600 font-semibold"
-                        : "text-[#7a92c1] hover:bg-[#f0f5ff] hover:text-[#2d4070]"
+                        ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     }`}
                   >
                     All Categories
@@ -384,46 +451,49 @@ function JobsContent() {
                     <button
                       key={cat.id}
                       onClick={() => setSelCat(cat.name)}
-                      className={`w-full text-left px-3 py-2 rounded-xl text-sm transition-all flex justify-between ${
+                      className={`w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition-all flex items-center justify-between cursor-pointer ${
                         selCat === cat.name
-                          ? "bg-blue-50 text-blue-600 font-semibold"
-                          : "text-[#7a92c1] hover:bg-[#f0f5ff] hover:text-[#2d4070]"
+                          ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
                       }`}
                     >
-                      <span>
-                        {cat.icon} {cat.name}
+                      <span className="truncate">{cat.name}</span>
+                      <span
+                        className={`text-[10px] ${
+                          selCat === cat.name ? "text-primary-foreground/80" : "text-muted-foreground"
+                        }`}
+                      >
+                        {cat.count}
                       </span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              <hr className="divider" />
+              <div className="border-t border-border" />
 
+              {/* Job Type */}
               <div>
-                <h3
-                  className="text-[#0c1a3a] text-sm font-semibold mb-3"
-                  style={{ fontFamily: "Sora,sans-serif" }}
-                >
+                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2.5">
                   Job Type
-                </h3>
+                </h4>
                 <div className="space-y-2">
                   {JOB_TYPES.map((t) => (
                     <label
                       key={t}
-                      className="flex items-center gap-2 cursor-pointer group"
+                      className="flex items-center gap-2.5 cursor-pointer group select-none text-xs"
                     >
                       <input
                         type="checkbox"
                         checked={selTypes.includes(t)}
                         onChange={() => toggleType(t)}
-                        className="accent-blue-600 w-4 h-4 rounded"
+                        className="w-4 h-4 rounded border-border text-primary focus:ring-primary/20 accent-primary"
                       />
                       <span
-                        className={`text-sm ${
+                        className={`font-medium ${
                           selTypes.includes(t)
-                            ? "text-blue-600 font-medium"
-                            : "text-[#7a92c1] group-hover:text-[#2d4070]"
+                            ? "text-foreground font-semibold"
+                            : "text-muted-foreground group-hover:text-foreground"
                         }`}
                       >
                         {t}
@@ -433,35 +503,49 @@ function JobsContent() {
                 </div>
               </div>
 
-              <Button onClick={clearAll} variant="outline" className="w-full">
+              <Button
+                onClick={clearAll}
+                variant="outline"
+                size="sm"
+                className="w-full text-xs font-semibold rounded-xl hover:text-destructive hover:border-destructive/40 cursor-pointer"
+              >
                 Clear All Filters
               </Button>
             </div>
           </aside>
 
-          <div className="flex-1 min-w-0">
+          {/* Scrolling Job Feed Grid */}
+          <div className="flex-1 min-w-0 w-full">
+            {/* Action Ticker & Sorter */}
             <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
               <div>
-                <span className="text-[#0c1a3a] font-semibold">
-                  {displayedJobs.length} jobs found
+                <span className="text-foreground font-bold text-base">
+                  {displayedJobs.length.toLocaleString()} Openings Found
                 </span>
                 {matched && (
-                  <span className="ml-2 badge badge-green">Resume matched</span>
+                  <span className="ml-2.5 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold border border-emerald-500/20">
+                    AI Matched
+                  </span>
                 )}
               </div>
-              <div className="flex items-center gap-3">
+
+              <div className="flex items-center gap-2.5">
                 <Button
                   onClick={() => setShowFilters(!showFilters)}
                   variant="outline"
+                  size="sm"
+                  className="lg:hidden rounded-xl gap-1.5 text-xs font-semibold"
                 >
-                  <SlidersHorizontal size={13} /> Filters
+                  <SlidersHorizontal className="size-3.5" />
+                  Filters
                 </Button>
-                <div className="flex items-center gap-2 bg-white border border-[#e2eaf8] rounded-xl px-3 py-2 shadow-card">
-                  <span className="text-[#7a92c1] text-xs">Sort:</span>
+
+                <div className="flex items-center gap-2 bg-card border border-border rounded-xl px-3 py-1.5 shadow-2xs">
+                  <span className="text-muted-foreground text-xs font-medium">Sort by:</span>
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="bg-transparent text-[#0c1a3a] text-sm outline-none cursor-pointer"
+                    className="bg-transparent text-foreground text-xs font-bold outline-none cursor-pointer"
                   >
                     <option value="relevance">Relevance</option>
                     <option value="recent">Most Recent</option>
@@ -470,35 +554,55 @@ function JobsContent() {
               </div>
             </div>
 
+            {/* Active Tag Indicators */}
             {(selCat || selTypes.length > 0) && (
               <div className="flex flex-wrap gap-2 mb-4">
                 {selCat && (
                   <span
-                    className="flex items-center gap-1.5 badge badge-blue cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20 text-xs font-semibold cursor-pointer hover:bg-primary/20"
                     onClick={() => setSelCat("")}
                   >
-                    {selCat} <X size={10} />
+                    {selCat} <X className="size-3" />
                   </span>
                 )}
                 {selTypes.map((t) => (
                   <span
                     key={t}
-                    className="flex items-center gap-1.5 badge badge-sky cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-muted text-foreground text-xs font-semibold cursor-pointer hover:bg-muted/80 border border-border"
                     onClick={() => toggleType(t)}
                   >
-                    {t} <X size={10} />
+                    {t} <X className="size-3" />
                   </span>
                 ))}
               </div>
             )}
 
+            {/* Job Grid List */}
             {loading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {[...Array(6)].map((_, i) => (
                   <JobCardSkeleton key={i} />
                 ))}
               </div>
-            ) : displayedJobs.length > 0 ? (
+            ) : displayedJobs.length === 0 ? (
+              <div className="text-center py-16 bg-card rounded-2xl border border-dashed border-border shadow-xs">
+                <Briefcase className="size-10 mx-auto text-muted-foreground mb-3" />
+                <h3 className="text-foreground font-bold text-lg mb-1">
+                  No matching jobs found
+                </h3>
+                <p className="text-muted-foreground text-sm max-w-sm mx-auto mb-5">
+                  Try adjusting your keywords, expanding your location, or clearing applied filters.
+                </p>
+                <Button
+                  onClick={clearAll}
+                  size="sm"
+                  className="rounded-xl gap-2 font-semibold"
+                >
+                  <RotateCcw className="size-3.5" />
+                  Reset All Filters
+                </Button>
+              </div>
+            ) : (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {displayedJobs.map((job) => (
@@ -506,37 +610,25 @@ function JobsContent() {
                   ))}
                 </div>
 
-                {/* Sentinel div — IntersectionObserver watches this to trigger next page */}
-                {hasMore && <div ref={sentinelRef} className="h-4 mt-4" />}
-
+                {/* Loading More Skeletons when fetching next page */}
                 {loadingMore && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
-                    {[...Array(4)].map((_, i) => (
-                      <JobCardSkeleton key={i} />
-                    ))}
+                    <JobCardSkeleton />
+                    <JobCardSkeleton />
                   </div>
                 )}
 
-                {!hasMore && (
-                  <p className="text-center text-sm text-[#7a92c1] py-6">
-                    All {totalFromApi} jobs loaded
-                  </p>
+                {/* Invisible Infinite Scroll Sentinel Target */}
+                {hasMore && (
+                  <div
+                    ref={sentinelRef}
+                    className="h-14 w-full flex items-center justify-center text-xs text-muted-foreground gap-2 pt-6"
+                  >
+                    <Loader2 className="size-4 animate-spin text-primary" />
+                    <span>Loading more opportunities...</span>
+                  </div>
                 )}
               </>
-            ) : (
-              <div className="text-center py-20 bg-white rounded-2xl border border-[#e2eaf8]">
-                <div className="text-5xl mb-4">🔍</div>
-                <h3
-                  className="text-xl font-bold text-[#0c1a3a] mb-2"
-                  style={{ fontFamily: "Sora,sans-serif" }}
-                >
-                  No jobs found
-                </h3>
-                <p className="text-[#7a92c1] mb-6 text-sm">
-                  Try different skills or clear filters
-                </p>
-                <Button onClick={clearAll}>Clear All Filters</Button>
-              </div>
             )}
           </div>
         </div>
@@ -549,8 +641,12 @@ export default function JobsPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center">
-          Loading...
+        <div className="min-h-screen bg-background pt-28 px-8">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-5">
+            {[...Array(6)].map((_, i) => (
+              <JobCardSkeleton key={i} />
+            ))}
+          </div>
         </div>
       }
     >

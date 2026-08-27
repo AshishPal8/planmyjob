@@ -19,11 +19,6 @@ interface Props {
   icon?: React.ReactNode;
   className?: string;
   minChars?: number;
-  /**
-   * multiple = comma-separated multi-select (e.g. skills). Picking a suggestion
-   * appends it and lets you keep typing. When false (e.g. city) picking a
-   * suggestion replaces the whole value — one value only.
-   */
   multiple?: boolean;
 }
 
@@ -58,15 +53,12 @@ export default function AutocompleteInput({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // the term currently being typed is everything after the last comma
-  // (or the whole value in single-select mode)
   const getCurrentTerm = (val: string) => {
     if (!multiple) return val.trim();
     const lastComma = val.lastIndexOf(",");
     return lastComma >= 0 ? val.slice(lastComma + 1).trim() : val.trim();
   };
 
-  // values already confirmed (multi-select) — used to hide duplicates
   const confirmedTerms = useMemo(() => {
     if (!multiple) return [] as string[];
     const lastComma = value.lastIndexOf(",");
@@ -77,7 +69,6 @@ export default function AutocompleteInput({
       .filter(Boolean);
   }, [value, multiple]);
 
-  // never show a suggestion the user has already picked
   const visibleSuggestions = useMemo(
     () =>
       suggestions.filter(
@@ -125,7 +116,6 @@ export default function AutocompleteInput({
 
   const handleSelect = (s: Suggestion) => {
     if (!multiple) {
-      // single-select: replace the whole value with the chosen label
       onChange(s.label);
       setOpen(false);
       setSuggestions([]);
@@ -133,11 +123,9 @@ export default function AutocompleteInput({
       return;
     }
 
-    // multi-select: append after the already-confirmed terms, skipping dupes
     const lastComma = value.lastIndexOf(",");
     const base = lastComma >= 0 ? value.slice(0, lastComma + 1).trimEnd() : "";
 
-    // duplicate → just drop the half-typed term, keep confirmed ones
     if (confirmedTerms.includes(s.label.toLowerCase())) {
       onChange(base ? `${base} ` : "");
     } else {
@@ -157,13 +145,10 @@ export default function AutocompleteInput({
       e.preventDefault();
       setActiveIdx((i) => Math.max(i - 1, -1));
     } else if (e.key === "Enter") {
-      // Enter picks the highlighted item, or the FIRST one if nothing is
-      // highlighted yet — no need to press the down arrow first.
       if (open && visibleSuggestions.length > 0) {
         e.preventDefault();
         handleSelect(visibleSuggestions[activeIdx >= 0 ? activeIdx : 0]);
       }
-      // otherwise let the surrounding form submit (run the search)
     } else if (e.key === "Escape") {
       setOpen(false);
     }
@@ -177,7 +162,7 @@ export default function AutocompleteInput({
 
   return (
     <div ref={containerRef} className={`relative flex-1 ${className}`}>
-      <div className="flex items-center gap-2.5 px-3 py-1">
+      <div className="flex items-center gap-2.5 px-3 py-1.5">
         {icon && <span className="shrink-0">{icon}</span>}
         <input
           ref={inputRef}
@@ -187,25 +172,25 @@ export default function AutocompleteInput({
           onKeyDown={handleKeyDown}
           onFocus={() => visibleSuggestions.length > 0 && setOpen(true)}
           placeholder={placeholder}
-          className="bg-transparent w-full text-[#0c1a3a] placeholder-[#a8bcd8] outline-none text-sm"
+          className="bg-transparent w-full text-foreground placeholder:text-muted-foreground outline-none text-sm font-medium"
           autoComplete="off"
         />
         {loading && (
-          <Loader2 size={13} className="text-primary animate-spin shrink-0" />
+          <Loader2 className="size-3.5 text-primary animate-spin shrink-0" />
         )}
         {value && !loading && (
           <button
             type="button"
             onClick={clear}
-            className="shrink-0 text-[#a8bcd8] hover:text-[#7a92c1]"
+            className="shrink-0 text-muted-foreground hover:text-foreground cursor-pointer"
           >
-            <X size={13} />
+            <X className="size-3.5" />
           </button>
         )}
       </div>
 
       {open && visibleSuggestions.length > 0 && (
-        <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-[#e2eaf8] rounded-2xl shadow-xl z-50 overflow-hidden">
+        <div className="absolute left-0 right-0 top-full mt-2 bg-popover text-popover-foreground border border-border rounded-xl shadow-lg z-50 overflow-hidden">
           <ul className="max-h-52 overflow-y-auto py-1">
             {visibleSuggestions.map((s, i) => (
               <li key={s.id}>
@@ -216,15 +201,15 @@ export default function AutocompleteInput({
                     handleSelect(s);
                   }}
                   onMouseEnter={() => setActiveIdx(i)}
-                  className={`w-full text-left px-4 py-2.5 text-sm flex items-center justify-between gap-2 transition-colors ${
+                  className={`w-full text-left px-4 py-2.5 text-sm flex items-center justify-between gap-2 transition-colors cursor-pointer ${
                     i === (activeIdx >= 0 ? activeIdx : 0)
-                      ? "bg-primary/10 text-primary"
-                      : "text-[#2d4070] hover:bg-[#f8fbff]"
+                      ? "bg-primary/10 text-primary font-medium"
+                      : "text-foreground hover:bg-muted"
                   }`}
                 >
-                  <span className="font-medium">{s.label}</span>
+                  <span>{s.label}</span>
                   {s.sublabel && (
-                    <span className="text-xs text-[#7a92c1] shrink-0">
+                    <span className="text-xs text-muted-foreground shrink-0">
                       {s.sublabel}
                     </span>
                   )}
@@ -232,13 +217,8 @@ export default function AutocompleteInput({
               </li>
             ))}
           </ul>
-          <div className="px-4 py-2 border-t border-[#f0f5ff] text-xs text-[#7a92c1]">
-            Press{" "}
-            <kbd className="bg-[#f0f5ff] px-1.5 py-0.5 rounded font-mono">
-              Enter
-            </kbd>{" "}
-            to select &ldquo;
-            {visibleSuggestions[activeIdx >= 0 ? activeIdx : 0].label}&rdquo;
+          <div className="px-4 py-2 border-t border-border text-xs text-muted-foreground">
+            Press <kbd className="bg-muted px-1.5 py-0.5 rounded font-mono text-[10px]">Enter</kbd> to select &ldquo;{visibleSuggestions[activeIdx >= 0 ? activeIdx : 0].label}&rdquo;
           </div>
         </div>
       )}

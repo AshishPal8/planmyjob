@@ -7,7 +7,7 @@ const columns = [
     title: "For Job Seekers",
     links: [
       { label: "Find Jobs", href: "/jobs" },
-      { label: "Recommended Jobs", href: "/recommended-jobs" },
+      { label: "ATS Resume Checker", href: "/ats-checker" },
       { label: "Match My Resume", href: "/match-resume" },
       { label: "Saved Jobs", href: "/saved-jobs" },
     ],

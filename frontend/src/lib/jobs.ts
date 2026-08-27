@@ -16,7 +16,10 @@ export interface BackendJob {
   isSaved: number;
   isApplied: number;
   applyCount?: number;
+  isFeatured?: boolean | null;
+  description?: string | null;
 }
+
 
 export interface FullJob {
   id: number;

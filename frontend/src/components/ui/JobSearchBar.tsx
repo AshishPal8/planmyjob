@@ -24,40 +24,60 @@ export default function JobSearchBar({
 
   const bar = (
     <div
-      className={`border border-[#e2eaf8] rounded-2xl p-2 flex flex-col sm:flex-row gap-2 ${
-        isHome ? "bg-white shadow-card-lg mb-4" : "bg-[#f8fbff]"
+      className={`rounded-2xl p-2 flex flex-col sm:flex-row gap-2 transition-all ${
+        isHome
+          ? "bg-card border border-border shadow-sm hover:border-primary/40 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
+          : "bg-card border border-border shadow-xs focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
       }`}
     >
-      <AutocompleteInput
-        value={skillsValue}
-        onChange={onSkillsChange}
-        endpoint="/search/skills"
-        buildLabel={(item) => item.name}
-        placeholder={
-          isHome
-            ? "Skills (e.g. react, next.js, python)"
-            : "Skills (e.g. react, python, aws)"
-        }
-        icon={<Search size={16} className="text-primary" />}
-        minChars={1}
-      />
-      <div className="hidden sm:block w-px bg-[#e2eaf8] self-stretch my-1" />
-      <AutocompleteInput
-        value={locationValue}
-        onChange={onLocationChange}
-        endpoint="/search/cities"
-        buildLabel={(item) => item.name}
-        buildSublabel={(item) => item.state}
-        placeholder={isHome ? "City, state or remote..." : "City or remote..."}
-        icon={<MapPin size={16} className="text-primary" />}
-        minChars={2}
-      />
+      <div className="flex-1 min-w-0">
+        <AutocompleteInput
+          value={skillsValue}
+          onChange={onSkillsChange}
+          endpoint="/search/skills"
+          buildLabel={(item) => item.name}
+          placeholder={
+            isHome
+              ? "Job title, skills (e.g. React, Python, DevOps)..."
+              : "Skills (e.g. React, Node.js, AWS)..."
+          }
+          icon={<Search className="size-4 text-muted-foreground shrink-0" />}
+          minChars={1}
+        />
+      </div>
+
+      <div className="hidden sm:block w-px bg-border self-stretch my-1" />
+
+      <div className="flex-1 min-w-0">
+        <AutocompleteInput
+          value={locationValue}
+          onChange={onLocationChange}
+          endpoint="/search/cities"
+          buildLabel={(item) => item.name}
+          buildSublabel={(item) => item.state}
+          placeholder={isHome ? "City, country or 'Remote'..." : "City or Remote..."}
+          icon={<MapPin className="size-4 text-muted-foreground shrink-0" />}
+          minChars={2}
+        />
+      </div>
+
       {isHome ? (
-        <Button type="submit">
-          Search Jobs <ArrowRight size={15} />
+        <Button
+          type="submit"
+          className="h-11 sm:h-auto px-6 rounded-xl font-semibold shrink-0 flex items-center justify-center gap-2 group cursor-pointer"
+        >
+          <span>Find Jobs</span>
+          <ArrowRight
+            className="size-4 transition-transform group-hover:translate-x-1"
+          />
         </Button>
       ) : (
-        <Button onClick={onSearch}>Search</Button>
+        <Button
+          onClick={onSearch}
+          className="h-10 px-5 rounded-xl font-semibold shrink-0 cursor-pointer"
+        >
+          Search
+        </Button>
       )}
     </div>
   );
@@ -69,6 +89,7 @@ export default function JobSearchBar({
           e.preventDefault();
           onSearch();
         }}
+        className="w-full"
       >
         {bar}
       </form>

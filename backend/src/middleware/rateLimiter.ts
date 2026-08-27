@@ -103,3 +103,26 @@ export const adminLimiter = rateLimit({
   legacyHeaders: false,
   ...rateLimitResponse("Admin rate limit exceeded. Please slow down."),
 });
+
+// 11. ATS Daily Limiter — strictly 3 ATS checks per 24 hours per IP to control AI API costs
+export const atsDailyLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000, // 24 hours
+  max: 3, // Strictly 3 requests per 24h per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  ...rateLimitResponse(
+    "Daily ATS scan limit (3 scans per day) reached. Please try again tomorrow.",
+  ),
+});
+
+// 12. ATS Burst Limiter — prevents concurrent spam uploads (max 1 per 20 seconds)
+export const atsBurstLimiter = rateLimit({
+  windowMs: 20 * 1000, // 20 seconds
+  max: 1,
+  standardHeaders: true,
+  legacyHeaders: false,
+  ...rateLimitResponse(
+    "An ATS scan is already processing or was just completed. Please wait 20 seconds before scanning again.",
+  ),
+});
+
